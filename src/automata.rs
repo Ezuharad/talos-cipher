@@ -35,10 +35,10 @@ pub struct Automaton {
 impl Automaton {
     /// Creates a new [`Automaton`] instance from a `state` represented as a [`ToroidalBoolMatrix`]
     /// and an [`AutomatonRule`] `rule`.
-    pub fn new(state: ToroidalBoolMatrix, rule: &AutomatonRule) -> Self {
+    pub fn new(state: ToroidalBoolMatrix, rule: AutomatonRule) -> Self {
         Automaton {
+            rule,
             state,
-            rule: rule.clone(),
         }
     }
     /// Iterates the [`Automaton`]'s rule `iterations` times.
@@ -93,14 +93,14 @@ impl Automaton {
 }
 
 /// Represents the state of the [`Automaton`] as a rectangular array of characters.
-/// ex. 
+/// ex.
 /// an Automaton with the state
 /// ```txt
 /// TFFT
 /// TFTT
 /// TTTT
 /// ```
-/// Will be represented as 
+/// Will be represented as
 /// ```txt
 /// #..#
 /// TFTT
@@ -119,7 +119,7 @@ impl ToString for Automaton {
                 })
                 .collect::<String>();
             result.push_str(&row_str);
-            result.push_str("\n");
+            result.push('\n');
         }
 
         result

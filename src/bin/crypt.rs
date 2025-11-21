@@ -2,6 +2,8 @@
 use clap::Parser;
 use rand::random;
 use std::collections::HashMap;
+use std::error::Error;
+use std::fmt;
 use std::fs;
 use std::io::{self, Write};
 use talos::matrix::ToroidalBinaryMatrix;
@@ -18,8 +20,25 @@ enum ArgParseError {
     /// A key must be provided to decrypt a message.
     NoKeyForDecrypt(),
 
-    /// A specified filename must exist
-    NoSuchFile(),
+    /// Error reading the specified file
+    FileReadError(),
+}
+
+impl Error for ArgParseError {}
+impl fmt::Display for ArgParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::NoAction() => {
+                write!(f, "No action")
+            }
+            Self::NoKeyForDecrypt() => {
+                write!(f, "No decryption key providesd")
+            }
+            Self::FileReadError() => {
+                write!(f, "Error reading file")
+            }
+        }
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -51,7 +70,7 @@ struct Args {
 
 fn main() -> Result<(), ArgParseError> {
     let args = Args::parse();
-    if args.key == None && args.decrypt {
+    if args.key.is_none() && args.decrypt {
         return Err(ArgParseError::NoKeyForDecrypt());
     }
     let seed = match args.key {
@@ -70,8 +89,8 @@ fn main() -> Result<(), ArgParseError> {
     let t_state = matrix::ToroidalBoolMatrix::new(t_table).unwrap();
     let s_state = matrix::ToroidalBoolMatrix::new(s_table).unwrap();
 
-    let mut transpose_automata = automata::Automaton::new(t_state, &RULE);
-    let mut shift_automata = automata::Automaton::new(s_state, &RULE);
+    let mut transpose_automata = automata::Automaton::new(t_state, RULE.clone());
+    let mut shift_automata = automata::Automaton::new(s_state, RULE);
 
     encrypt::temporal_seed_automata(
         &mut transpose_automata,
@@ -87,7 +106,7 @@ fn main() -> Result<(), ArgParseError> {
     let input_buffer = match fs::read(args.input) {
         Ok(buffer) => buffer,
         Err(_) => {
-            return Err(ArgParseError::NoSuchFile());
+            return Err(ArgParseError::FileReadError());
         }
     };
 
@@ -123,36 +142,5 @@ const RULE: automata::AutomatonRule = automata::AutomatonRule {
     dies: [true, true, false, false, false, true, true, true, true],
 };
 
-const T_INIT_MATRIX: &str = "P#O#N#M#L#K#J#I#
-#L#K.J#I.H.G#F.H
-Q.D#C#B#A#7#6#E#
-#M.X#W.V.U.T.5#G
-R.E.H#G.F#E.S#D.
-#N#Y.T#S.R.D#4.F
-S.F.I#3#2.Q#R#C.
-#O.Z#U.7#Z#C.3#E
-T#G#J.4.6#P.Q.B#
-#P#2.V#5.Y#B.2.D
-U.H#K.W.X#O#P.A.
-#Q.3#L.M.N.A#Z.C
-V.I.4#5.6#7.O#7.
-#R.J.K#L.M.N.Y#B
-W.S#T.U#V#W.X.6#
-#X.Y.Z.2#3.4.5.A";
-
-const S_INIT_MATRIX: &str = ".A#3.2#Z.Y#X.W#V
-7.B.4.P#O.N.M#L.
-#6#C#5#Q#3.2#Z.U
-E.5#D.6.R#4#7.K#
-#D.4#E.7.S#5.Y.T
-F.C#3.F.A#T#6#J#
-#Q#B.2.G#B.U#X.S
-G#P.A.Z#H.C#V.I#
-.R#O.7#Y.I#D.W#R
-H.E#N.6#X.J.E#H.
-#S.D#M.5#W.K#F.Q
-I#F.C#L.4#V#L.G.
-.T.A.B#K.3#U.M.P
-J#G#H#I#J#2#T#N#
-.U#V.W.X.Y.Z#S.O
-K#L.M#N#O#P.Q#R.";
+const T_INIT_MATRIX: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/data/init_matrix/T_init_matrix.txt"));
+const S_INIT_MATRIX: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/data/init_matrix/S_init_matrix.txt"));

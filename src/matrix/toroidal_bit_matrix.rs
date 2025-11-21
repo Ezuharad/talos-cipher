@@ -31,7 +31,8 @@ impl ToroidalBinaryMatrix for ToroidalBitMatrix {
             return Err(MatrixConstructError::RaggedTable());
         }
 
-        let mut storage: Vec<u32> = Vec::with_capacity(rows * cols * u32::BITS as usize / 8);
+        let mut storage: Vec<u32> =
+            Vec::with_capacity(rows * cols * u32::BITS as usize / (u8::BITS as usize));
         for chunk in table
             .into_iter()
             .flat_map(|r| r.into_iter())
@@ -39,8 +40,8 @@ impl ToroidalBinaryMatrix for ToroidalBitMatrix {
             .chunks(u32::BITS as usize)
         {
             let mut next_element: u32 = 0;
-            for (i, b) in chunk.to_vec().into_iter().enumerate() {
-                next_element += if b { 2_u32.pow(i as u32) } else { 0 };
+            for (i, b) in chunk.iter().enumerate() {
+                next_element += if *b { 2_u32.pow(i as u32) } else { 0 };
             }
             storage.push(next_element);
         }
@@ -68,8 +69,8 @@ impl ToroidalBinaryMatrix for ToroidalBitMatrix {
 
         let vec_idx: usize = bit_index / u32::BITS as usize;
         let element_offset: usize = bit_index % u32::BITS as usize;
-        
-        let original_value = self.storage[vec_idx] << (element_offset & 1 ) > 0;
+
+        let original_value = self.storage[vec_idx] << (element_offset & 1) > 0;
         if value {
             self.storage[vec_idx] |= 1 << element_offset;
         } else {
@@ -82,8 +83,8 @@ impl ToroidalBinaryMatrix for ToroidalBitMatrix {
         if self.rows != other.rows || self.cols != other.cols {
             return Err(MatrixOpError::DifferentShapes());
         }
-        for (i, element) in (&mut self.storage).into_iter().enumerate() {
-            *element ^= other.storage[i as usize];
+        for (i, element) in self.storage.iter_mut().enumerate() {
+            *element ^= other.storage[i];
         }
         Ok(())
     }
@@ -98,7 +99,8 @@ impl ToroidalBitMatrix {
         &self.storage
     }
     /// Constructs a new [`ToroidalBitMatrix`] from storage, as well as the count of rows and
-    /// columns. Returns an error if the storage is the wrong size for the specified matrix shape.
+    /// columns. Returns an error if the storage is the wrong size for the specified matrix shape
+    /// or if the number of rows or columns is zero.
     pub fn from_storage(
         rows: usize,
         cols: usize,
@@ -107,10 +109,16 @@ impl ToroidalBitMatrix {
         if rows == 0 || cols == 0 {
             return Err(MatrixConstructError::EmptyTable());
         }
-        let n_elements = rows * cols;
-        if storage.len()
-            != ((n_elements / u32::BITS as usize) + (n_elements % u32::BITS as usize > 0) as usize)
-        {
+
+        let n_bit_elements = rows * cols;
+        let expected_vec_elements = (n_bit_elements / u32::BITS as usize)
+            + if n_bit_elements.is_multiple_of(u32::BITS as usize) {
+                0
+            } else {
+                1
+            };
+
+        if storage.len() != expected_vec_elements {
             return Err(MatrixConstructError::InvalidStorage());
         }
         Ok(Self {

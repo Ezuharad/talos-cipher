@@ -22,8 +22,7 @@ pub fn explode_u8_to_bool(byte: u8) -> Vec<bool> {
 pub fn explode_u8_to_bool_vec(bytes: Vec<u8>) -> Vec<bool> {
     bytes
         .iter()
-        .map(|b| explode_u8_to_bool(*b))
-        .flatten()
+        .flat_map(|b| explode_u8_to_bool(*b))
         .collect()
 }
 

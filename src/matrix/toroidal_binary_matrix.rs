@@ -1,4 +1,7 @@
 // 2025 Steven Chiacchira
+use std::error::Error;
+use std::fmt;
+
 /// Type used to specify elements of a [`ToroidalBinaryMatrix`].
 pub type MatrixIndex = (isize, isize);
 
@@ -13,6 +16,23 @@ pub enum MatrixConstructError {
     InvalidStorage(),
 }
 
+impl Error for MatrixConstructError {}
+impl fmt::Display for MatrixConstructError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::RaggedTable() => {
+                write!(f, "Ragged table")
+            }
+            Self::EmptyTable() => {
+                write!(f, "Empty table")
+            }
+            Self::InvalidStorage() => {
+                write!(f, "Invalid storage")
+            }
+        }
+    }
+}
+
 /// Error arising from applying a matrix operation
 #[derive(Debug)]
 pub enum MatrixOpError {
@@ -20,6 +40,20 @@ pub enum MatrixOpError {
     DifferentShapes(),
     /// Some operations require matrices to have compatible shapes.
     IncompatibleShapes(),
+}
+
+impl Error for MatrixOpError {}
+impl fmt::Display for MatrixOpError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::DifferentShapes() => {
+                write!(f, "Different shapes")
+            }
+            Self::IncompatibleShapes() => {
+                write!(f, "Incompativle shapes")
+            }
+        }
+    }
 }
 
 /// Trait specifying methods for matrices with binary entries on a torus.

@@ -108,7 +108,7 @@ where
 fn block_split_256_message(message: Vec<u8>) -> Vec<Vec<bool>> {
     message
         .chunks(256 / 8) // read each byte into a chunk of 256 bits (32 bytes)
-        .map(|a| a.iter().map(|b| explode_u8_to_bool(*b)).flatten().collect())
+        .map(|a| a.iter().flat_map(|b| explode_u8_to_bool(*b)).collect())
         .collect()
 }
 
@@ -167,8 +167,7 @@ pub fn encrypt_message_256(
 
     blocks
         .iter()
-        .map(|b| encrypt_block_256(b.to_vec(), shift_automata, transpose_automata))
-        .flatten()
+        .flat_map(|b| encrypt_block_256(b.to_vec(), shift_automata, transpose_automata))
         .collect()
 }
 
@@ -181,8 +180,7 @@ pub fn decrypt_message_256(
 ) -> Vec<u8> {
     let message_bits = ciphertext
         .chunks(16 * 16)
-        .map(|b| decrypt_block_256(b.to_vec(), shift_automata, transpose_automata))
-        .flatten()
+        .flat_map(|b| decrypt_block_256(b.to_vec(), shift_automata, transpose_automata))
         .collect();
     concat_bool_to_u8_vec(message_bits)
 }
@@ -193,14 +191,20 @@ pub fn decrypt_message_256(
 pub fn temporal_seed_automata(
     automaton: &mut Automaton,
     key: u32,
-    seed_positions: &Vec<Vec<MatrixIndex>>,
+    seed_positions: &[Vec<MatrixIndex>],
 ) {
     automaton.iter_rule(8);
-    for bit_pos in 0..(u32::BITS as usize) {
+    for (bit_pos, seed_position) in seed_positions.iter().enumerate() {
         let overwritten_value: bool = (key >> bit_pos & 1) > 0;
-        for matrix_idx in &seed_positions[bit_pos] {
-            automaton.set_state(&matrix_idx, overwritten_value);
+        for matrix_idx in seed_position {
+            automaton.set_state(matrix_idx, overwritten_value);
         }
-        automaton.iter_rule(8);
     }
+    // for bit_pos in 0..(u32::BITS as usize) {
+    //     let overwritten_value: bool = (key >> bit_pos & 1) > 0;
+    //     for matrix_idx in &seed_positions[bit_pos] {
+    //         automaton.set_state(&matrix_idx, overwritten_value);
+    //     }
+    //     automaton.iter_rule(8);
+    // }
 }

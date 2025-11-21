@@ -1,7 +1,10 @@
 // 2025 Steven Chiacchira
 use crate::matrix::MatrixIndex;
 use std::collections::HashMap;
+use std::error::Error;
+use std::fmt;
 use std::iter::zip;
+
 /// Error occurring during the reading of a string defining a table of `bool` values.
 #[derive(Debug)]
 pub enum TableReadError {
@@ -9,6 +12,20 @@ pub enum TableReadError {
     InvalidCharacter(char),
     /// Error occurring from a non-uniform table
     RaggedTable(),
+}
+
+impl Error for TableReadError {}
+impl fmt::Display for TableReadError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::InvalidCharacter(c) => {
+                write!(f, "Invalid character: {}", c)
+            }
+            Self::RaggedTable() => {
+                write!(f, "Ragged table")
+            }
+        }
+    }
 }
 
 const DEFAULT_KEYS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";

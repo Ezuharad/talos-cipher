@@ -51,7 +51,7 @@ impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
         let row = idx.0.rem_euclid(self.rows as isize);
         let col = idx.1.rem_euclid(self.cols as isize);
 
-        let vec_idx: usize = row as usize * self.get_cols() as usize + col as usize;
+        let vec_idx: usize = row as usize * self.get_cols() + col as usize;
         let result = self.storage[vec_idx];
         self.storage[vec_idx] = value;
 

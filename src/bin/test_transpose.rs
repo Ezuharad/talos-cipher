@@ -63,7 +63,7 @@ fn main() {
         let table = parse::parse_bool_table(&seed_matrix, &char_map).unwrap();
         let state = matrix::ToroidalBoolMatrix::new(table).unwrap();
 
-        let mut automaton = automata::Automaton::new(state, &RULE);
+        let mut automaton = automata::Automaton::new(state, RULE);
 
         for iteration in 0..(args.seed_samples) {
             automaton.iter_rule(args.inter_generations);
