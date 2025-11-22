@@ -1,5 +1,5 @@
 // 2025 Steven Chiacchira
-use crate::matrix::{MatrixIndex, ToroidalBinaryMatrix, ToroidalBoolMatrix};
+use crate::matrix::{MatrixIndex, ToroidalBinaryMatrix};
 use std::mem;
 
 /// The character used to represent an [`Automaton`]'s `true` state in files and String
@@ -27,15 +27,15 @@ pub struct AutomatonRule {
 #[derive(Debug)]
 /// Object defining a 2D, binary cellular automaton
 /// This CA implementation assumes that the geometry of the cell-space is spherical.
-pub struct Automaton {
+pub struct Automaton<T: ToroidalBinaryMatrix> {
     rule: AutomatonRule,
-    state: ToroidalBoolMatrix,
+    state: T,
 }
 
-impl Automaton {
+impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     /// Creates a new [`Automaton`] instance from a `state` represented as a [`ToroidalBoolMatrix`]
     /// and an [`AutomatonRule`] `rule`.
-    pub fn new(state: ToroidalBoolMatrix, rule: AutomatonRule) -> Self {
+    pub fn new(state: T, rule: AutomatonRule) -> Self {
         Automaton {
             rule,
             state,
@@ -43,7 +43,7 @@ impl Automaton {
     }
     /// Iterates the [`Automaton`]'s rule `iterations` times.
     pub fn iter_rule(&mut self, iterations: u32) {
-        let (rows, cols) = (self.state.rows, self.state.cols);
+        let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
 
         let mut copy = self.state.clone();
         for _ in 0..iterations {
@@ -65,7 +65,7 @@ impl Automaton {
     }
 
     /// Returns a reference to the Automaton state, represented as a [`ToroidalBoolMatrix`].
-    pub fn get_state(&self) -> &ToroidalBoolMatrix {
+    pub fn get_state(&self) -> &T {
         &self.state
     }
 
@@ -106,10 +106,10 @@ impl Automaton {
 /// TFTT
 /// TTTT
 /// ```
-impl ToString for Automaton {
+impl<T: ToroidalBinaryMatrix + Clone> ToString for Automaton<T> {
     fn to_string(&self) -> String {
-        let (rows, cols) = (self.state.rows, self.state.cols);
-        let mut result: String = String::with_capacity((self.state.rows + 1) * self.state.cols);
+        let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
+        let mut result: String = String::with_capacity((self.state.get_rows() + 1) * self.state.get_cols());
 
         for row in 0..rows {
             let row_str = (0..cols)
