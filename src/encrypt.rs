@@ -198,4 +198,5 @@ pub fn temporal_seed_automata(
             automaton.set_state(matrix_idx, overwritten_value);
         }
     }
+    automaton.iter_rule(8);
 }
