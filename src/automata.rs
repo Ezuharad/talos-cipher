@@ -1,5 +1,5 @@
 // 2025 Steven Chiacchira
-use crate::matrix::{MatrixIndex, ToroidalBinaryMatrix};
+use crate::matrix::{ToroidalMatrixIndex, ToroidalBinaryMatrix};
 use std::mem;
 
 /// The character used to represent an [`Automaton`]'s `true` state in files and String
@@ -70,13 +70,13 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     }
 
     /// Sets the state of the cell at `idx` to `value`, returning the original value at `idx`.
-    pub fn set_state(&mut self, idx: &MatrixIndex, value: bool) -> bool {
+    pub fn set_state(&mut self, idx: &ToroidalMatrixIndex, value: bool) -> bool {
         self.state.set(idx, value)
     }
 
     /// Counts the number of alive [Moore
     /// neighbors](https://en.wikipedia.org/wiki/Moore_neighborhood) at `idx`.
-    pub fn alive_neighbors(&self, idx: MatrixIndex) -> u32 {
+    pub fn alive_neighbors(&self, idx: ToroidalMatrixIndex) -> u32 {
         let (row, col) = (idx.0, idx.1);
         let mut sum_neighbors = 0;
 

@@ -1,14 +1,17 @@
 // 2025 Steven Chiacchira
-use crate::matrix::{MatrixConstructError, MatrixIndex, MatrixOpError, ToroidalBinaryMatrix};
+use crate::matrix::{
+    MatrixConstructError, MatrixOpError, ToroidalBinaryMatrix, ToroidalMatrixIndex,
+};
+use num_traits;
 
 #[derive(Debug, Clone)]
-pub struct ToroidalBitMatrix {
+pub struct ToroidalBitMatrix<T: num_traits::Unsigned + num_traits::PrimInt> {
     pub rows: usize,
     pub cols: usize,
-    storage: Vec<u32>,
+    storage: Vec<T>,
 }
 
-impl ToroidalBinaryMatrix for ToroidalBitMatrix {
+impl<T: num_traits::Unsigned + num_traits::PrimInt> ToroidalBinaryMatrix for ToroidalBitMatrix<T> {
     fn get_rows(&self) -> usize {
         self.rows
     }
@@ -17,12 +20,15 @@ impl ToroidalBinaryMatrix for ToroidalBitMatrix {
     }
     fn new(table: Vec<Vec<bool>>) -> Result<Self, MatrixConstructError> {
         let rows = table.len();
-        let cols = if rows == 0 { 0 } else { table[0].len() };
+        if rows == 0 {
+            return Err(MatrixConstructError::EmptyTable());
+        }
+        let cols = table[0].len();
         if cols == 0 {
             return Err(MatrixConstructError::EmptyTable());
         }
 
-        // if the table is ragged (every column is not the same size) then we reject the input and return an Err result
+        // If the each row's is not equal to the first's, the table is invalid
         if table
             .iter()
             .map(|row| row.len() != cols)
@@ -31,100 +37,106 @@ impl ToroidalBinaryMatrix for ToroidalBitMatrix {
             return Err(MatrixConstructError::RaggedTable());
         }
 
-        let mut storage: Vec<u32> =
-            Vec::with_capacity(rows * cols * u32::BITS as usize / (u8::BITS as usize));
-        for chunk in table
-            .into_iter()
-            .flat_map(|r| r.into_iter())
-            .collect::<Vec<bool>>()
-            .chunks(u32::BITS as usize)
-        {
-            let mut next_element: u32 = 0;
-            for (i, b) in chunk.iter().enumerate() {
-                next_element += if *b { 2_u32.pow(i as u32) } else { 0 };
-            }
-            storage.push(next_element);
-        }
+        let n_bits = rows * cols;
+        let n_bits_per_entry = T::zero().count_zeros() as usize;
+        let n_storage_entries = n_bits.div_ceil(n_bits_per_entry);
+        let storage: Vec<T> = vec![T::zero(); n_storage_entries];
 
-        Ok(Self {
+        let mut result = Self {
             rows,
             cols,
             storage,
-        })
-    }
-    fn at(&self, idx: MatrixIndex) -> bool {
-        let row = idx.0.rem_euclid(self.rows as isize);
-        let col = idx.1.rem_euclid(self.cols as isize);
-        let bit_index = row as usize * self.cols + col as usize;
+        };
 
-        let vec_idx: usize = bit_index / u32::BITS as usize;
-        let element_offset: usize = bit_index % u32::BITS as usize;
-
-        (self.storage[vec_idx] >> element_offset) & 1 != 0
-    }
-    fn set(&mut self, idx: &MatrixIndex, value: bool) -> bool {
-        let row = idx.0.rem_euclid(self.rows as isize);
-        let col = idx.1.rem_euclid(self.cols as isize);
-        let bit_index = row as usize * self.cols + col as usize;
-
-        let vec_idx: usize = bit_index / u32::BITS as usize;
-        let element_offset: usize = bit_index % u32::BITS as usize;
-
-        let original_value = self.storage[vec_idx] << (element_offset & 1) > 0;
-        if value {
-            self.storage[vec_idx] |= 1 << element_offset;
-        } else {
-            self.storage[vec_idx] &= !(1 << element_offset);
+        for (row, col_slice) in table.into_iter().enumerate() {
+            for (col, val) in col_slice.into_iter().enumerate() {
+                let idx = (row as isize, col as isize);
+                result.set(&idx, val);
+            }
         }
 
-        original_value
+        Ok(result)
     }
-    fn bitwise_xor(&mut self, other: &ToroidalBitMatrix) -> Result<(), MatrixOpError> {
-        if self.rows != other.rows || self.cols != other.cols {
+
+    fn at(&self, idx: &ToroidalMatrixIndex) -> bool {
+        let (row, col) = self.canonize_index(*idx);
+        let (element_idx, bit_idx) = self.get_element_bit_index_from_canon_index((row, col));
+        let element = self.storage[element_idx];
+
+        Self::get_bit_t(element, bit_idx)
+    }
+    fn set(&mut self, idx: &ToroidalMatrixIndex, new_val: bool) -> bool {
+        let (row, col) = self.canonize_index(*idx);
+        let (element_idx, bit_idx) = self.get_element_bit_index_from_canon_index((row, col));
+        let element = &mut self.storage[element_idx];
+
+        Self::set_bit_t(element, bit_idx, new_val)
+    }
+    fn bitwise_xor(&mut self, other: &Self) -> Result<(), MatrixOpError> {
+        if self.get_cols() != other.get_cols() || self.get_rows() != other.get_rows() {
             return Err(MatrixOpError::DifferentShapes());
         }
-        for (i, element) in self.storage.iter_mut().enumerate() {
-            *element ^= other.storage[i];
+        for (this_element, other_element) in self.storage.iter_mut().zip(other.get_storage()) {
+            *this_element = *this_element ^ *other_element;
         }
+
         Ok(())
     }
     fn popcount(&self) -> u32 {
-        self.storage.iter().map(|e| e.count_ones()).sum()
+        self.storage.iter().map(|b| b.count_ones()).sum()
     }
 }
 
-impl ToroidalBitMatrix {
-    /// Returns the storage backing the matrix.
-    pub fn get_storage(&self) -> &Vec<u32> {
+impl<T: num_traits::Unsigned + num_traits::PrimInt> ToroidalBitMatrix<T> {
+    pub fn get_storage(&self) -> &Vec<T> {
         &self.storage
     }
-    /// Constructs a new [`ToroidalBitMatrix`] from storage, as well as the count of rows and
-    /// columns. Returns an error if the storage is the wrong size for the specified matrix shape
-    /// or if the number of rows or columns is zero.
+
     pub fn from_storage(
         rows: usize,
         cols: usize,
-        storage: Vec<u32>,
+        storage: Vec<T>,
     ) -> Result<Self, MatrixConstructError> {
         if rows == 0 || cols == 0 {
             return Err(MatrixConstructError::EmptyTable());
         }
-
-        let n_bit_elements = rows * cols;
-        let expected_vec_elements = (n_bit_elements / u32::BITS as usize)
-            + if n_bit_elements.is_multiple_of(u32::BITS as usize) {
-                0
-            } else {
-                1
-            };
-
-        if storage.len() != expected_vec_elements {
+        let bits_per_t = T::zero().count_zeros() as usize;
+        let n_bits = rows * cols;
+        if n_bits.div_ceil(bits_per_t) != storage.len() {
             return Err(MatrixConstructError::InvalidStorage());
         }
+
         Ok(Self {
             rows,
             cols,
             storage,
         })
+    }
+
+    fn get_element_bit_index_from_canon_index(&self, index: (usize, usize)) -> (usize, usize) {
+        let (bit_row, bit_col) = index;
+        let flat_bit_idx = self.get_cols() * bit_row + bit_col;
+        let bits_per_t = T::zero().count_zeros() as usize;
+
+        let element_idx = flat_bit_idx / bits_per_t;
+        let bit_idx = flat_bit_idx % bits_per_t;
+
+        (element_idx, bit_idx)
+    }
+
+    fn get_bit_t(val: T, bit_index: usize) -> bool {
+        let bit_mask = T::one() << bit_index;
+        (val & bit_mask) != T::zero()
+    }
+
+    fn set_bit_t(data: &mut T, bit_index: usize, new_val: bool) -> bool {
+        let result = Self::get_bit_t(*data, bit_index);
+        let bit_mask = T::one() << bit_index;
+        if new_val {
+            *data = *data | bit_mask;
+        } else {
+            *data = *data & !bit_mask;
+        }
+        result
     }
 }

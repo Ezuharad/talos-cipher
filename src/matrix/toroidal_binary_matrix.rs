@@ -2,10 +2,8 @@
 use std::error::Error;
 use std::fmt;
 
-use num_traits::Euclid;
-
 /// Type used to specify elements of a [`ToroidalBinaryMatrix`].
-pub type MatrixIndex = (isize, isize);
+pub type ToroidalMatrixIndex = (isize, isize);
 
 /// Error occurring during Matrix initialization
 #[derive(Debug)]
@@ -69,12 +67,12 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// Returns the value of the matrix element at `idx`. If the row or column coordinate in `idx` is
     /// negative or greater than the number of rows or columns of the matrix respectively, the
     /// modulo of the coordinate will be used. This property is what makes the matrix 'toroidal'.
-    fn at(&self, idx: &MatrixIndex) -> bool;
+    fn at(&self, idx: &ToroidalMatrixIndex) -> bool;
     /// Sets the value of the matrix element at `idx` to `value` and returns the original value.
     /// If the row or column coordinate in `idx` is negative or greater than the number of rows
     /// or columns of the matrix respectively, the modulo of the coordinate will be used. This
     /// property is what makes the matrix 'toroidal'.
-    fn set(&mut self, idx: &MatrixIndex, value: bool) -> bool;
+    fn set(&mut self, idx: &ToroidalMatrixIndex, value: bool) -> bool;
     /// Performs bitwise xor of this matrix with `other`, returning a [`MatrixOpError`] if the two
     /// matrices have different shapes.
     fn bitwise_xor(&mut self, other: &Self) -> Result<(), MatrixOpError>;
@@ -94,14 +92,14 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// Converts `index` to a canonized index.
     /// Given index i = (a, b), canonized index i' = (a % rows, b % cols), where x % y is the Euclidean
     /// remainder of x / y.
-    fn canonize_index(&self, index: MatrixIndex) -> (usize, usize) {
+    fn canonize_index(&self, index: ToroidalMatrixIndex) -> (usize, usize) {
         let (row, col) = index;
         let row_result = self.canonize_row_index(row);
         let col_result = self.canonize_col_index(col);
         (row_result, col_result)
     }
     /// Swaps the value at `entry1` with the value at `entry2`.
-    fn swap_entries(&mut self, entry1: &MatrixIndex, entry2: &MatrixIndex) {
+    fn swap_entries(&mut self, entry1: &ToroidalMatrixIndex, entry2: &ToroidalMatrixIndex) {
         let temp = self.set(entry1, self.at(entry2));
         self.set(entry2, temp);
     }

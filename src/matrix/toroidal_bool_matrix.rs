@@ -1,5 +1,5 @@
 // 2025 Steven Chiacchira
-use crate::matrix::{MatrixConstructError, MatrixIndex, MatrixOpError, ToroidalBinaryMatrix};
+use crate::matrix::{MatrixConstructError, ToroidalMatrixIndex, MatrixOpError, ToroidalBinaryMatrix};
 
 #[derive(Debug, Clone)]
 pub struct ToroidalBoolMatrix {
@@ -39,13 +39,13 @@ impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
             storage,
         })
     }
-    fn at(&self, idx: &MatrixIndex) -> bool {
+    fn at(&self, idx: &ToroidalMatrixIndex) -> bool {
         let (row, col) = self.canonize_index(*idx);
         let vec_idx: usize = row * self.cols + col;
 
         self.storage[vec_idx]
     }
-    fn set(&mut self, idx: &MatrixIndex, value: bool) -> bool {
+    fn set(&mut self, idx: &ToroidalMatrixIndex, value: bool) -> bool {
         let (row, col) = self.canonize_index(*idx);
 
         let vec_idx: usize = row * self.get_cols() + col;

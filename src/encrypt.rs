@@ -1,6 +1,6 @@
 // 2025 Steven Chiacchira
 use crate::automata::Automaton;
-use crate::matrix::{MatrixIndex, ToroidalBinaryMatrix, ToroidalBoolMatrix};
+use crate::matrix::{ToroidalMatrixIndex, ToroidalBinaryMatrix, ToroidalBoolMatrix};
 use crate::parse::{concat_bool_to_u8, concat_bool_to_u8_vec, explode_u8_to_bool};
 use std::string::{self};
 
@@ -10,10 +10,10 @@ const BLOCK_SIZE: usize = 256;
 /// `u8`.
 pub fn read_4_bits<T>(
     matrix: &T,
-    idx0: MatrixIndex,
-    idx1: MatrixIndex,
-    idx2: MatrixIndex,
-    idx3: MatrixIndex,
+    idx0: ToroidalMatrixIndex,
+    idx1: ToroidalMatrixIndex,
+    idx2: ToroidalMatrixIndex,
+    idx3: ToroidalMatrixIndex,
 ) -> u8
 where
     T: ToroidalBinaryMatrix,
@@ -196,7 +196,7 @@ pub fn decrypt_message_256(
 pub fn temporal_seed_automata(
     automaton: &mut Automaton<ToroidalBoolMatrix>,
     key: u32,
-    seed_positions: &[Vec<MatrixIndex>],
+    seed_positions: &[Vec<ToroidalMatrixIndex>],
 ) {
     automaton.iter_rule(8);
     for (bit_pos, seed_position) in seed_positions.iter().enumerate() {
