@@ -1,5 +1,6 @@
 // 2025 Steven Chiacchira
-use crate::matrix::{MatrixIndex, ToroidalBinaryMatrix, ToroidalBoolMatrix};
+use crate::matrix::{ToroidalBinaryMatrix, ToroidalMatrixIndex};
+use std::fmt;
 use std::mem;
 
 /// The character used to represent an [`Automaton`]'s `true` state in files and String
@@ -27,23 +28,20 @@ pub struct AutomatonRule {
 #[derive(Debug)]
 /// Object defining a 2D, binary cellular automaton
 /// This CA implementation assumes that the geometry of the cell-space is spherical.
-pub struct Automaton {
+pub struct Automaton<T: ToroidalBinaryMatrix> {
     rule: AutomatonRule,
-    state: ToroidalBoolMatrix,
+    state: T,
 }
 
-impl Automaton {
+impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     /// Creates a new [`Automaton`] instance from a `state` represented as a [`ToroidalBoolMatrix`]
     /// and an [`AutomatonRule`] `rule`.
-    pub fn new(state: ToroidalBoolMatrix, rule: &AutomatonRule) -> Self {
-        Automaton {
-            state,
-            rule: rule.clone(),
-        }
+    pub fn new(state: T, rule: AutomatonRule) -> Self {
+        Automaton { rule, state }
     }
     /// Iterates the [`Automaton`]'s rule `iterations` times.
     pub fn iter_rule(&mut self, iterations: u32) {
-        let (rows, cols) = (self.state.rows, self.state.cols);
+        let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
 
         let mut copy = self.state.clone();
         for _ in 0..iterations {
@@ -52,7 +50,7 @@ impl Automaton {
                     let idx = (row as isize, col as isize);
                     let n_alive_neighbors = self.alive_neighbors(idx);
 
-                    if self.state.at(idx) {
+                    if self.state.at(&idx) {
                         copy.set(&idx, !self.rule.dies[n_alive_neighbors as usize]);
                     } else {
                         copy.set(&idx, self.rule.born[n_alive_neighbors as usize]);
@@ -65,63 +63,64 @@ impl Automaton {
     }
 
     /// Returns a reference to the Automaton state, represented as a [`ToroidalBoolMatrix`].
-    pub fn get_state(&self) -> &ToroidalBoolMatrix {
+    pub fn get_state(&self) -> &T {
         &self.state
     }
 
     /// Sets the state of the cell at `idx` to `value`, returning the original value at `idx`.
-    pub fn set_state(&mut self, idx: &MatrixIndex, value: bool) -> bool {
-        self.state.set(&idx, value)
+    pub fn set_state(&mut self, idx: &ToroidalMatrixIndex, value: bool) -> bool {
+        self.state.set(idx, value)
     }
 
     /// Counts the number of alive [Moore
     /// neighbors](https://en.wikipedia.org/wiki/Moore_neighborhood) at `idx`.
-    pub fn alive_neighbors(&self, idx: MatrixIndex) -> u32 {
+    pub fn alive_neighbors(&self, idx: ToroidalMatrixIndex) -> u32 {
         let (row, col) = (idx.0, idx.1);
         let mut sum_neighbors = 0;
 
         for r in (row - 1)..=(row + 1) {
             for c in (col - 1)..=(col + 1) {
-                sum_neighbors += self.state.at((r, c)) as u32
+                sum_neighbors += self.state.at(&(r, c)) as u32
             }
         }
 
-        sum_neighbors -= self.state.at((row, col)) as u32;
+        sum_neighbors -= self.state.at(&(row, col)) as u32;
 
-        return sum_neighbors;
+        sum_neighbors
     }
 }
 
 /// Represents the state of the [`Automaton`] as a rectangular array of characters.
-/// ex. 
+/// ex.
 /// an Automaton with the state
 /// ```txt
 /// TFFT
 /// TFTT
 /// TTTT
 /// ```
-/// Will be represented as 
+/// Will be represented as
 /// ```txt
 /// #..#
 /// TFTT
 /// TTTT
 /// ```
-impl ToString for Automaton {
-    fn to_string(&self) -> String {
-        let (rows, cols) = (self.state.rows, self.state.cols);
-        let mut result: String = String::with_capacity((self.state.rows + 1) * self.state.cols);
+impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for Automaton<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
+        let mut result: String =
+            String::with_capacity((self.state.get_rows() + 1) * self.state.get_cols());
 
         for row in 0..rows {
             let row_str = (0..cols)
-                .map(|c| match self.state.at((row as isize, c as isize)) {
+                .map(|c| match self.state.at(&(row as isize, c as isize)) {
                     true => TRUE_CHAR,
                     false => FALSE_CHAR,
                 })
                 .collect::<String>();
             result.push_str(&row_str);
-            result.push_str("\n");
+            result.push('\n');
         }
 
-        result
+        write!(f, "{}", result)
     }
 }

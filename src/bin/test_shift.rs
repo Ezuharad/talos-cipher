@@ -33,8 +33,8 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let mut global_used_states: HashSet<Vec<bool>, _> = HashSet::new();
-    let mut global_duplicates: Vec<Vec<bool>> = Vec::new();
+    let mut global_used_states: HashSet<Vec<u8>, _> = HashSet::new();
+    let mut global_duplicates: Vec<Vec<u8>> = Vec::new();
 
     let seed_gen = (0..args.seeds).map(if args.use_contiguous_seeds {
         |i| i
@@ -55,17 +55,17 @@ fn main() {
         let mut char_map: HashMap<char, bool> = parse::gen_char_map(seed);
         char_map.insert('#', true);
         char_map.insert('.', false);
-        let mut local_used_states: HashSet<Vec<bool>, _> = HashSet::new();
+        let mut local_used_states: HashSet<Vec<u8>, _> = HashSet::new();
         let mut n_local_alive_total = 0;
 
         let table = parse::parse_bool_table(&matrix_config, &char_map).unwrap();
-        let state = matrix::ToroidalBoolMatrix::new(table).unwrap();
+        let state = matrix::ToroidalBitMatrix::new(table).unwrap();
         let rule = automata::AutomatonRule {
             born: [false, false, true, true, true, true, true, false, false],
             dies: [true, true, false, false, false, true, true, true, true],
         };
 
-        let mut automaton = automata::Automaton::new(state, &rule);
+        let mut automaton = automata::Automaton::new(state, rule);
         if !args.no_temporal_seed {
             encrypt::temporal_seed_automata(&mut automaton, seed, &temporal_seed_map);
         }

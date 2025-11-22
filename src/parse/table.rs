@@ -1,7 +1,10 @@
 // 2025 Steven Chiacchira
-use crate::matrix::MatrixIndex;
+use crate::matrix::ToroidalMatrixIndex;
 use std::collections::HashMap;
+use std::error::Error;
+use std::fmt;
 use std::iter::zip;
+
 /// Error occurring during the reading of a string defining a table of `bool` values.
 #[derive(Debug)]
 pub enum TableReadError {
@@ -9,6 +12,20 @@ pub enum TableReadError {
     InvalidCharacter(char),
     /// Error occurring from a non-uniform table
     RaggedTable(),
+}
+
+impl Error for TableReadError {}
+impl fmt::Display for TableReadError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::InvalidCharacter(c) => {
+                write!(f, "Invalid character: {}", c)
+            }
+            Self::RaggedTable() => {
+                write!(f, "Ragged table")
+            }
+        }
+    }
 }
 
 const DEFAULT_KEYS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -70,7 +87,7 @@ pub fn parse_bool_table(
 /// Ex.
 /// The first entry of the returned vector is a list of matrix indices associated with the first
 /// bit index of the key.
-pub fn get_temporal_seed_map(string: &str) -> Vec<Vec<MatrixIndex>> {
+pub fn get_temporal_seed_map(string: &str) -> Vec<Vec<ToroidalMatrixIndex>> {
     let mut result = Vec::new();
     for character in DEFAULT_KEYS.chars() {
         result.push(get_char_indices(string, character))
@@ -79,7 +96,7 @@ pub fn get_temporal_seed_map(string: &str) -> Vec<Vec<MatrixIndex>> {
 }
 
 /// Returns the indices of `character` in `string` as [`MatrixIndex`](crate::matrix::MatrixIndex).
-fn get_char_indices(string: &str, character: char) -> Vec<MatrixIndex> {
+fn get_char_indices(string: &str, character: char) -> Vec<ToroidalMatrixIndex> {
     let mut result = Vec::new();
     for (row, line) in string.lines().enumerate() {
         for (col, ch) in line.chars().enumerate() {

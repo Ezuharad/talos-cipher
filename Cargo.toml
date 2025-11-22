@@ -28,3 +28,5 @@ path = "src/bin/test_transpose.rs"
 rand ="0.9.0"
 clap = { version = "4.0.30", features = ["derive"] }
 itertools = "0.14.0"
+num-traits = "0.2.19"
+cargo-husky = "1.5.0"

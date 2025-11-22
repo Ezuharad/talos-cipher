@@ -55,7 +55,7 @@ fn main() {
             dies: [true, true, false, false, false, true, true, true, true],
         };
 
-        let mut automaton = automata::Automaton::new(state, &rule);
+        let mut automaton = automata::Automaton::new(state, rule);
 
         for generation in 0..args.generations {
             automaton.iter_rule(1);
