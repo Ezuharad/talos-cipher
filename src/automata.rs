@@ -1,5 +1,6 @@
 // 2025 Steven Chiacchira
 use crate::matrix::{ToroidalBinaryMatrix, ToroidalMatrixIndex};
+use std::fmt;
 use std::mem;
 
 /// The character used to represent an [`Automaton`]'s `true` state in files and String
@@ -103,8 +104,8 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
 /// TFTT
 /// TTTT
 /// ```
-impl<T: ToroidalBinaryMatrix + Clone> ToString for Automaton<T> {
-    fn to_string(&self) -> String {
+impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for Automaton<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
         let mut result: String =
             String::with_capacity((self.state.get_rows() + 1) * self.state.get_cols());
@@ -120,6 +121,6 @@ impl<T: ToroidalBinaryMatrix + Clone> ToString for Automaton<T> {
             result.push('\n');
         }
 
-        result
+        write!(f, "{}", result)
     }
 }
