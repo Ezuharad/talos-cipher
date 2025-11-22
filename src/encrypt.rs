@@ -4,6 +4,8 @@ use crate::matrix::{MatrixIndex, ToroidalBinaryMatrix, ToroidalBoolMatrix};
 use crate::parse::{concat_bool_to_u8, concat_bool_to_u8_vec, explode_u8_to_bool};
 use std::string::{self};
 
+const BLOCK_SIZE: usize = 256;
+
 /// Reads 4 bit values at `idx0`, `idx`, `idx2`, `idx3`, in `matrix`, then concatenates them into a
 /// `u8`.
 pub fn read_4_bits<T>(
@@ -106,10 +108,16 @@ where
 /// Splits `message` into 256 bit blocks, represented as flat vectors.
 /// The final block of `message` is not padded to 256 bits.
 fn block_split_256_message(message: Vec<u8>) -> Vec<Vec<bool>> {
-    message
-        .chunks(256 / 8) // read each byte into a chunk of 256 bits (32 bytes)
+    let mut blocks: Vec<Vec<bool>> = message
+        .chunks(BLOCK_SIZE / 8) // read each byte into a chunk of 256 bits (32 bytes)
         .map(|a| a.iter().flat_map(|b| explode_u8_to_bool(*b)).collect())
-        .collect()
+        .collect();
+
+    if let Some(last) = blocks.last_mut() {
+        last.resize(BLOCK_SIZE, false);
+    }
+
+    blocks
 }
 
 /// Reconstructs a UTF-8 string from the bitstring `bits`, represented as a `Vec<bool>`.
@@ -160,10 +168,7 @@ pub fn encrypt_message_256(
     shift_automata: &mut Automaton,
     transpose_automata: &mut Automaton,
 ) -> Vec<bool> {
-    let mut blocks = block_split_256_message(message);
-    if let Some(last) = blocks.last_mut() {
-        last.resize(16 * 16, false);
-    }
+    let blocks = block_split_256_message(message);
 
     blocks
         .iter()
@@ -200,11 +205,4 @@ pub fn temporal_seed_automata(
             automaton.set_state(matrix_idx, overwritten_value);
         }
     }
-    // for bit_pos in 0..(u32::BITS as usize) {
-    //     let overwritten_value: bool = (key >> bit_pos & 1) > 0;
-    //     for matrix_idx in &seed_positions[bit_pos] {
-    //         automaton.set_state(&matrix_idx, overwritten_value);
-    //     }
-    //     automaton.iter_rule(8);
-    // }
 }

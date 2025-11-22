@@ -1,4 +1,29 @@
 // 2025 Steven Chiacchira
+pub fn pack_u8s_to_u32s(bytes: &[u8]) -> Vec<u32> {
+    const U32_PER_U8: usize = (u32::BITS / u8::BITS) as usize;
+    let n_u32s = bytes.len().div_ceil(U32_PER_U8);
+
+    let mut result = Vec::with_capacity(n_u32s);
+
+    let full_chunks = bytes.len() / U32_PER_U8;
+    for i in 0..full_chunks {
+        let chunk = &bytes[i * U32_PER_U8..(i + 1) * U32_PER_U8];
+        result.push(u32::from_le_bytes(chunk.try_into().unwrap()));
+    }
+
+    let remainder = bytes.len() % U32_PER_U8;
+    if remainder > 0 {
+        let mut chunk = [0_u8; U32_PER_U8];
+        chunk[..remainder].copy_from_slice(&bytes[full_chunks * 4..]);
+        result.push(u32::from_le_bytes(chunk))
+    }
+
+    result
+}
+
+pub fn unpack_u32s_to_u8s(data: &[u32]) -> Vec<u8> {
+    data.iter().flat_map(|b| b.to_le_bytes()).collect()
+}
 
 /// Transforms a `u8` into a `Vec<bool>` containing its binary representation.
 /// See also [`concat_bool_to_u8`].
@@ -17,13 +42,10 @@ pub fn explode_u8_to_bool(byte: u8) -> Vec<bool> {
 /// ```txt
 /// [1, 2] -> [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0]
 /// ```
-/// 
+///
 /// See also [`concat_bool_to_u8_vec`].
 pub fn explode_u8_to_bool_vec(bytes: Vec<u8>) -> Vec<bool> {
-    bytes
-        .iter()
-        .flat_map(|b| explode_u8_to_bool(*b))
-        .collect()
+    bytes.iter().flat_map(|b| explode_u8_to_bool(*b)).collect()
 }
 
 /// Concatenates a bitstring represented as a `Vec<bool>` into a `u8`.
