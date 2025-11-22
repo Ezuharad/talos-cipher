@@ -131,7 +131,7 @@ fn encrypt_block_256(
     shift_automata.iter_rule(11);
     transpose_automata.iter_rule(11);
 
-    scramble_matrix_256(&mut message_matrix, transpose_automata.get_state());
+    scramble_matrix_256(&mut message_matrix, shift_automata.get_state());
     let _ = message_matrix.bitwise_xor(transpose_automata.get_state());
 
     message_matrix.get_storage().to_vec()
@@ -148,7 +148,7 @@ fn decrypt_block_256(
     transpose_automata.iter_rule(11);
 
     let _ = message_matrix.bitwise_xor(transpose_automata.get_state());
-    unscramble_matrix_256(&mut message_matrix, transpose_automata.get_state());
+    unscramble_matrix_256(&mut message_matrix, shift_automata.get_state());
 
     message_matrix.get_storage().to_vec()
 }
