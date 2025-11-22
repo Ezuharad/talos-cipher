@@ -40,18 +40,15 @@ impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
         })
     }
     fn at(&self, idx: &MatrixIndex) -> bool {
-        let row = idx.0.rem_euclid(self.rows as isize);
-        let col = idx.1.rem_euclid(self.cols as isize);
-
-        let vec_idx: usize = row as usize * self.cols + col as usize;
+        let (row, col) = self.canonize_index(*idx);
+        let vec_idx: usize = row * self.cols + col;
 
         self.storage[vec_idx]
     }
     fn set(&mut self, idx: &MatrixIndex, value: bool) -> bool {
-        let row = idx.0.rem_euclid(self.rows as isize);
-        let col = idx.1.rem_euclid(self.cols as isize);
+        let (row, col) = self.canonize_index(*idx);
 
-        let vec_idx: usize = row as usize * self.get_cols() + col as usize;
+        let vec_idx: usize = row * self.get_cols() + col;
         let result = self.storage[vec_idx];
         self.storage[vec_idx] = value;
 
@@ -68,8 +65,8 @@ impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
         Ok(())
     }
     fn swap_rows(&mut self, row1: isize, row2: isize) {
-        let row_1_idx: usize = row1.rem_euclid(self.rows as isize) as usize;
-        let row_2_idx: usize = row2.rem_euclid(self.rows as isize) as usize;
+        let row_1_idx: usize = self.canonize_col_index(row1);
+        let row_2_idx: usize = self.canonize_col_index(row2);
         let offset_1 = row_1_idx * self.cols;
         let offset_2 = row_2_idx * self.cols;
 
