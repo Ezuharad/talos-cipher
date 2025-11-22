@@ -67,7 +67,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// Returns the value of the matrix element at `idx`. If the row or column coordinate in `idx` is
     /// negative or greater than the number of rows or columns of the matrix respectively, the
     /// modulo of the coordinate will be used. This property is what makes the matrix 'toroidal'.
-    fn at(&self, idx: MatrixIndex) -> bool;
+    fn at(&self, idx: &MatrixIndex) -> bool;
     /// Sets the value of the matrix element at `idx` to `value` and returns the original value.
     /// If the row or column coordinate in `idx` is negative or greater than the number of rows
     /// or columns of the matrix respectively, the modulo of the coordinate will be used. This
@@ -77,20 +77,25 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// Performs bitwise xor of this matrix with `other`, returning a [`MatrixOpError`] if the two
     /// matrices have different shapes.
     fn bitwise_xor(&mut self, other: &Self) -> Result<(), MatrixOpError>;
+    /// Swaps the value at `entry1` with the value at `entry2`.
+    fn swap_entries(&mut self, entry1: &MatrixIndex, entry2: &MatrixIndex) {
+        let temp = self.set(entry1, self.at(entry2));
+        self.set(entry2, temp);
+    }
     /// Swaps the two rows indexed by `row1` and `row2` of this Matrix.
     fn swap_rows(&mut self, row1: isize, row2: isize) {
         for col in 0..self.get_cols() {
-            let temp = self.at((row1, col as isize));
-            self.set(&(row2, col as isize), self.at((row1, col as isize)));
-            self.set(&(row1, col as isize), temp);
+            let entry1 = (row1, col as isize);
+            let entry2 = (row2, col as isize);
+            self.swap_entries(&entry1, &entry2);
         }
     }
     /// Swaps the two columns indexed by `col1` and `col2` of this Matrix.
     fn swap_cols(&mut self, col1: isize, col2: isize) {
         for row in 0..self.get_rows() {
-            let temp = self.at((row as isize, col1));
-            self.set(&(row as isize, col1), self.at((row as isize, col2)));
-            self.set(&(row as isize, col2), temp);
+            let entry1 = (row as isize, col1);
+            let entry2 = (row as isize, col2);
+            self.swap_entries(&entry1, &entry2);
         }
     }
     /// Returns the number of 'alive' (1) elements in the Matrix.

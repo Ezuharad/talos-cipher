@@ -39,7 +39,7 @@ impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
             storage,
         })
     }
-    fn at(&self, idx: MatrixIndex) -> bool {
+    fn at(&self, idx: &MatrixIndex) -> bool {
         let row = idx.0.rem_euclid(self.rows as isize);
         let col = idx.1.rem_euclid(self.cols as isize);
 

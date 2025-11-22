@@ -52,7 +52,7 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
                     let idx = (row as isize, col as isize);
                     let n_alive_neighbors = self.alive_neighbors(idx);
 
-                    if self.state.at(idx) {
+                    if self.state.at(&idx) {
                         copy.set(&idx, !self.rule.dies[n_alive_neighbors as usize]);
                     } else {
                         copy.set(&idx, self.rule.born[n_alive_neighbors as usize]);
@@ -71,7 +71,7 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
 
     /// Sets the state of the cell at `idx` to `value`, returning the original value at `idx`.
     pub fn set_state(&mut self, idx: &MatrixIndex, value: bool) -> bool {
-        self.state.set(&idx, value)
+        self.state.set(idx, value)
     }
 
     /// Counts the number of alive [Moore
@@ -82,13 +82,13 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
 
         for r in (row - 1)..=(row + 1) {
             for c in (col - 1)..=(col + 1) {
-                sum_neighbors += self.state.at((r, c)) as u32
+                sum_neighbors += self.state.at(&(r, c)) as u32
             }
         }
 
-        sum_neighbors -= self.state.at((row, col)) as u32;
+        sum_neighbors -= self.state.at(&(row, col)) as u32;
 
-        return sum_neighbors;
+        sum_neighbors
     }
 }
 
@@ -113,7 +113,7 @@ impl<T: ToroidalBinaryMatrix + Clone> ToString for Automaton<T> {
 
         for row in 0..rows {
             let row_str = (0..cols)
-                .map(|c| match self.state.at((row as isize, c as isize)) {
+                .map(|c| match self.state.at(&(row as isize, c as isize)) {
                     true => TRUE_CHAR,
                     false => FALSE_CHAR,
                 })

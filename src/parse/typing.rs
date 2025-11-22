@@ -25,6 +25,14 @@ pub fn unpack_u32s_to_u8s(data: &[u32]) -> Vec<u8> {
     data.iter().flat_map(|b| b.to_le_bytes()).collect()
 }
 
+// pub fn unpack_u32s_to_bools(data: &[u32]) -> Vec<bool> {
+//
+// }
+
+// pub fn pack_bools_to_u32s(bits: &[bool]) -> Vec<32> {
+//
+// }
+
 /// Transforms a `u8` into a `Vec<bool>` containing its binary representation.
 /// See also [`concat_bool_to_u8`].
 pub fn explode_u8_to_bool(byte: u8) -> Vec<bool> {

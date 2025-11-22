@@ -20,7 +20,7 @@ where
 {
     let mut result: u8 = 0;
     for (i, idx) in [idx0, idx1, idx2, idx3].iter().enumerate() {
-        result += if matrix.at(*idx) {
+        result += if matrix.at(idx) {
             2_u8.pow(i as u32)
         } else {
             0
