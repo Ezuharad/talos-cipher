@@ -1,5 +1,7 @@
 // 2025 Steven Chiacchira
-use crate::matrix::{MatrixConstructError, ToroidalMatrixIndex, MatrixOpError, ToroidalBinaryMatrix};
+use crate::matrix::{
+    MatrixConstructError, MatrixOpError, ToroidalBinaryMatrix, ToroidalMatrixIndex,
+};
 
 #[derive(Debug, Clone)]
 pub struct ToroidalBoolMatrix {

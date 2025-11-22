@@ -51,7 +51,7 @@ fn main() {
             parse::parse_bool_table(&read_to_string(&args.init_file).unwrap(), &char_map).unwrap();
         let state = matrix::ToroidalBoolMatrix::new(table).unwrap();
         let rule = automata::AutomatonRule {
-           born: [false, false, true, true, true, true, true, false, false],
+            born: [false, false, true, true, true, true, true, false, false],
             dies: [true, true, false, false, false, true, true, true, true],
         };
 

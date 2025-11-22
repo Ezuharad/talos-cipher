@@ -1,5 +1,5 @@
 // 2025 Steven Chiacchira
-use crate::matrix::{ToroidalMatrixIndex, ToroidalBinaryMatrix};
+use crate::matrix::{ToroidalBinaryMatrix, ToroidalMatrixIndex};
 use std::mem;
 
 /// The character used to represent an [`Automaton`]'s `true` state in files and String
@@ -36,10 +36,7 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     /// Creates a new [`Automaton`] instance from a `state` represented as a [`ToroidalBoolMatrix`]
     /// and an [`AutomatonRule`] `rule`.
     pub fn new(state: T, rule: AutomatonRule) -> Self {
-        Automaton {
-            rule,
-            state,
-        }
+        Automaton { rule, state }
     }
     /// Iterates the [`Automaton`]'s rule `iterations` times.
     pub fn iter_rule(&mut self, iterations: u32) {
@@ -109,7 +106,8 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
 impl<T: ToroidalBinaryMatrix + Clone> ToString for Automaton<T> {
     fn to_string(&self) -> String {
         let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
-        let mut result: String = String::with_capacity((self.state.get_rows() + 1) * self.state.get_cols());
+        let mut result: String =
+            String::with_capacity((self.state.get_rows() + 1) * self.state.get_cols());
 
         for row in 0..rows {
             let row_str = (0..cols)
