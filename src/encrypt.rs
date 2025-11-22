@@ -1,10 +1,10 @@
 // 2025 Steven Chiacchira
 use crate::automata::Automaton;
-use crate::matrix::{ToroidalMatrixIndex, ToroidalBinaryMatrix, ToroidalBoolMatrix};
-use crate::parse::{concat_bool_to_u8, concat_bool_to_u8_vec, explode_u8_to_bool};
-use std::string::{self};
+use crate::matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalMatrixIndex};
 
-const BLOCK_SIZE: usize = 256;
+const N_ROWS: usize = 16;
+const N_COLS: usize = 16;
+const BLOCK_SIZE: usize = N_ROWS * N_COLS;
 
 /// Reads 4 bit values at `idx0`, `idx`, `idx2`, `idx3`, in `matrix`, then concatenates them into a
 /// `u8`.
@@ -107,37 +107,29 @@ where
 
 /// Splits `message` into 256 bit blocks, represented as flat vectors.
 /// The final block of `message` is not padded to 256 bits.
-fn block_split_256_message(message: Vec<u8>) -> Vec<Vec<bool>> {
-    let mut blocks: Vec<Vec<bool>> = message
-        .chunks(BLOCK_SIZE / 8) // read each byte into a chunk of 256 bits (32 bytes)
-        .map(|a| a.iter().flat_map(|b| explode_u8_to_bool(*b)).collect())
-        .collect();
+fn block_split_256_message(message: Vec<u8>) -> Vec<Vec<u8>> {
+    let u8s_per_block = BLOCK_SIZE / u8::BITS as usize;
+    let mut blocks: Vec<Vec<u8>> = message.chunks(u8s_per_block).map(|c| c.to_vec()).collect();
 
     if let Some(last) = blocks.last_mut() {
-        last.resize(BLOCK_SIZE, false);
+        last.resize(u8s_per_block, 0_u8);
     }
 
     blocks
 }
 
-/// Reconstructs a UTF-8 string from the bitstring `bits`, represented as a `Vec<bool>`.
-pub fn reconstruct_message(bits: Vec<bool>) -> Result<String, string::FromUtf8Error> {
-    let bytes: Vec<u8> = bits
-        .chunks(u8::BITS as usize)
-        .map(|b| concat_bool_to_u8(b.to_vec()))
-        .collect();
-    String::from_utf8(bytes)
-}
+const N_ITERS_PER_BLOCK: u32 = 11;
 
 /// Encrypts a 256 bit message block with the Talos algorithm.
 fn encrypt_block_256(
-    message_block: Vec<bool>,
-    shift_automata: &mut Automaton<ToroidalBoolMatrix>,
-    transpose_automata: &mut Automaton<ToroidalBoolMatrix>,
-) -> Vec<bool> {
-    let mut message_matrix = ToroidalBoolMatrix::new(message_block.chunks(16).map(|v| v.to_vec()).collect()).unwrap();
-    shift_automata.iter_rule(11);
-    transpose_automata.iter_rule(11);
+    message_block: Vec<u8>,
+    shift_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+    transpose_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+) -> Vec<u8> {
+    let mut message_matrix =
+        ToroidalBitMatrix::<u8>::from_storage(N_ROWS, N_COLS, message_block).unwrap();
+    shift_automata.iter_rule(N_ITERS_PER_BLOCK);
+    transpose_automata.iter_rule(N_ITERS_PER_BLOCK);
 
     scramble_matrix_256(&mut message_matrix, shift_automata.get_state());
     let _ = message_matrix.bitwise_xor(transpose_automata.get_state());
@@ -147,13 +139,14 @@ fn encrypt_block_256(
 
 /// Decrypts a 256 bit message block with the Talos algorithm.
 fn decrypt_block_256(
-    encrypted_block: Vec<bool>,
-    shift_automata: &mut Automaton<ToroidalBoolMatrix>,
-    transpose_automata: &mut Automaton<ToroidalBoolMatrix>,
-) -> Vec<bool> {
-    let mut message_matrix = ToroidalBoolMatrix::from_storage(16, 16, encrypted_block).unwrap();
-    shift_automata.iter_rule(11);
-    transpose_automata.iter_rule(11);
+    encrypted_block: Vec<u8>,
+    shift_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+    transpose_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+) -> Vec<u8> {
+    let mut message_matrix =
+        ToroidalBitMatrix::<u8>::from_storage(N_ROWS, N_COLS, encrypted_block).unwrap();
+    shift_automata.iter_rule(N_ITERS_PER_BLOCK);
+    transpose_automata.iter_rule(N_ITERS_PER_BLOCK);
 
     let _ = message_matrix.bitwise_xor(transpose_automata.get_state());
     unscramble_matrix_256(&mut message_matrix, shift_automata.get_state());
@@ -165,9 +158,9 @@ fn decrypt_block_256(
 /// Notably *DOES NOT* perform the temporal seeding as defined in RFC-1.
 pub fn encrypt_message_256(
     message: Vec<u8>,
-    shift_automata: &mut Automaton<ToroidalBoolMatrix>,
-    transpose_automata: &mut Automaton<ToroidalBoolMatrix>,
-) -> Vec<bool> {
+    shift_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+    transpose_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+) -> Vec<u8> {
     let blocks = block_split_256_message(message);
 
     blocks
@@ -179,22 +172,22 @@ pub fn encrypt_message_256(
 /// Decrypts a message with a 256 bit block using the Talos algorithm.
 /// Notably *DOES NOT* perform the temporal seeding as defined in RFC-1.
 pub fn decrypt_message_256(
-    ciphertext: Vec<bool>,
-    shift_automata: &mut Automaton<ToroidalBoolMatrix>,
-    transpose_automata: &mut Automaton<ToroidalBoolMatrix>,
+    ciphertext: Vec<u8>,
+    shift_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+    transpose_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
 ) -> Vec<u8> {
-    let message_bits = ciphertext
-        .chunks(16 * 16)
+    let blocks = block_split_256_message(ciphertext);
+    blocks
+        .iter()
         .flat_map(|b| decrypt_block_256(b.to_vec(), shift_automata, transpose_automata))
-        .collect();
-    concat_bool_to_u8_vec(message_bits)
+        .collect()
 }
 
 /// Performs temporal seeding across `automata` using the method described in RFC-1. `key` is the
 /// 32-bit key used for seeding, and `seed_position` maps bit indices in `seed` to (potentially
 /// multiple) `MatrixIndices`.
 pub fn temporal_seed_automata(
-    automaton: &mut Automaton<ToroidalBoolMatrix>,
+    automaton: &mut Automaton<ToroidalBitMatrix<u8>>,
     key: u32,
     seed_positions: &[Vec<ToroidalMatrixIndex>],
 ) {

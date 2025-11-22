@@ -7,7 +7,6 @@ use std::fmt;
 use std::fs;
 use std::io::{self, Write};
 use talos::matrix::ToroidalBinaryMatrix;
-use talos::parse::explode_u8_to_bool_vec;
 use talos::{automata, encrypt, matrix, parse};
 
 #[derive(Debug)]
@@ -86,8 +85,8 @@ fn main() -> Result<(), ArgParseError> {
     let t_table = parse::parse_bool_table(T_INIT_MATRIX, &char_map).unwrap();
     let s_table = parse::parse_bool_table(S_INIT_MATRIX, &char_map).unwrap();
 
-    let t_state = matrix::ToroidalBoolMatrix::new(t_table).unwrap();
-    let s_state = matrix::ToroidalBoolMatrix::new(s_table).unwrap();
+    let t_state = matrix::ToroidalBitMatrix::<u8>::new(t_table).unwrap();
+    let s_state = matrix::ToroidalBitMatrix::<u8>::new(s_table).unwrap();
 
     let mut transpose_automata = automata::Automaton::new(t_state, RULE.clone());
     let mut shift_automata = automata::Automaton::new(s_state, RULE);
@@ -112,15 +111,9 @@ fn main() -> Result<(), ArgParseError> {
 
     let output_bytes = if args.encrypt {
         eprintln!("Using key {}", seed);
-        let bits = encrypt::encrypt_message_256(
-            input_buffer,
-            &mut shift_automata,
-            &mut transpose_automata,
-        );
-        parse::concat_bool_to_u8_vec(bits)
+        encrypt::encrypt_message_256(input_buffer, &mut shift_automata, &mut transpose_automata)
     } else if args.decrypt {
-        let bits = explode_u8_to_bool_vec(input_buffer);
-        encrypt::decrypt_message_256(bits, &mut shift_automata, &mut transpose_automata)
+        encrypt::decrypt_message_256(input_buffer, &mut shift_automata, &mut transpose_automata)
     } else {
         return Err(ArgParseError::NoAction());
     };
@@ -142,5 +135,11 @@ const RULE: automata::AutomatonRule = automata::AutomatonRule {
     dies: [true, true, false, false, false, true, true, true, true],
 };
 
-const T_INIT_MATRIX: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/data/init_matrix/T_init_matrix.txt"));
-const S_INIT_MATRIX: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/data/init_matrix/S_init_matrix.txt"));
+const T_INIT_MATRIX: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/init_matrix/T_init_matrix.txt"
+));
+const S_INIT_MATRIX: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/init_matrix/S_init_matrix.txt"
+));
