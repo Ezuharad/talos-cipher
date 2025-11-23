@@ -1,33 +1,54 @@
 // 2025 Steven Chiacchira
-use crate::automata::Automaton;
-use crate::matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalMatrixIndex};
+use std::collections::HashMap;
 
-const N_ROWS: usize = 16;
-const N_COLS: usize = 16;
-const BLOCK_SIZE: usize = N_ROWS * N_COLS;
+use crate::automata::{Automaton, AutomatonRule};
+use crate::matrix::{
+    MatrixConstructError, ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalMatrixIndex,
+};
+use crate::parse;
 
-/// Reads 4 bit values at `idx0`, `idx`, `idx2`, `idx3`, in `matrix`, then concatenates them into a
-/// `u8`.
-pub fn read_4_bits<T>(
-    matrix: &T,
-    idx0: ToroidalMatrixIndex,
-    idx1: ToroidalMatrixIndex,
-    idx2: ToroidalMatrixIndex,
-    idx3: ToroidalMatrixIndex,
-) -> u8
-where
-    T: ToroidalBinaryMatrix,
-{
-    let mut result: u8 = 0;
-    for (i, idx) in [idx0, idx1, idx2, idx3].iter().enumerate() {
-        result += if matrix.at(idx) {
-            2_u8.pow(i as u32)
-        } else {
-            0
-        };
-    }
+pub const N_ROWS: usize = 16;
+pub const N_COLS: usize = 16;
+pub const BLOCK_SIZE: usize = N_ROWS * N_COLS;
 
-    result
+pub const T_INIT_MATRIX: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/init_matrix/T_init_matrix.txt"
+));
+pub const S_INIT_MATRIX: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/data/init_matrix/S_init_matrix.txt"
+));
+pub const AUTOMATA_RULE: AutomatonRule = AutomatonRule {
+    born: [false, false, true, true, true, true, true, false, false],
+    dies: [true, true, false, false, false, true, true, true, true],
+};
+
+pub type TalosMatrix = ToroidalBitMatrix<u8>;
+pub type TalosAutomaton = Automaton<TalosMatrix>;
+
+pub fn get_transpose_shift_automata(
+    char_map: HashMap<char, bool>,
+) -> (
+    Result<TalosAutomaton, MatrixConstructError>,
+    Result<TalosAutomaton, MatrixConstructError>,
+) {
+    let t_table = parse::parse_bool_table(T_INIT_MATRIX, &char_map).unwrap();
+    let s_table = parse::parse_bool_table(S_INIT_MATRIX, &char_map).unwrap();
+
+    let t_state = TalosMatrix::new(t_table);
+    let s_state = TalosMatrix::new(s_table);
+
+    let t_automaton = match t_state {
+        Err(err) => Err(err),
+        Ok(matrix) => Ok(Automaton::new(matrix, AUTOMATA_RULE)),
+    };
+    let s_automaton = match s_state {
+        Err(err) => Err(err),
+        Ok(matrix) => Ok(Automaton::new(matrix, AUTOMATA_RULE)),
+    };
+
+    (t_automaton, s_automaton)
 }
 
 /// Applies the matrix scrambling algorithm $V$ explained in RFC-0.
@@ -123,11 +144,10 @@ const N_ITERS_PER_BLOCK: u32 = 11;
 /// Encrypts a 256 bit message block with the Talos algorithm.
 fn encrypt_block_256(
     message_block: Vec<u8>,
-    shift_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
-    transpose_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+    shift_automata: &mut TalosAutomaton,
+    transpose_automata: &mut TalosAutomaton,
 ) -> Vec<u8> {
-    let mut message_matrix =
-        ToroidalBitMatrix::<u8>::from_storage(N_ROWS, N_COLS, message_block).unwrap();
+    let mut message_matrix = TalosMatrix::from_storage(N_ROWS, N_COLS, message_block).unwrap();
     shift_automata.iter_rule(N_ITERS_PER_BLOCK);
     transpose_automata.iter_rule(N_ITERS_PER_BLOCK);
 
@@ -140,11 +160,10 @@ fn encrypt_block_256(
 /// Decrypts a 256 bit message block with the Talos algorithm.
 fn decrypt_block_256(
     encrypted_block: Vec<u8>,
-    shift_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
-    transpose_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+    shift_automata: &mut TalosAutomaton,
+    transpose_automata: &mut TalosAutomaton,
 ) -> Vec<u8> {
-    let mut message_matrix =
-        ToroidalBitMatrix::<u8>::from_storage(N_ROWS, N_COLS, encrypted_block).unwrap();
+    let mut message_matrix = TalosMatrix::from_storage(N_ROWS, N_COLS, encrypted_block).unwrap();
     shift_automata.iter_rule(N_ITERS_PER_BLOCK);
     transpose_automata.iter_rule(N_ITERS_PER_BLOCK);
 
@@ -158,8 +177,8 @@ fn decrypt_block_256(
 /// Notably *DOES NOT* perform the temporal seeding as defined in RFC-1.
 pub fn encrypt_message_256(
     message: Vec<u8>,
-    shift_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
-    transpose_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+    shift_automata: &mut TalosAutomaton,
+    transpose_automata: &mut TalosAutomaton,
 ) -> Vec<u8> {
     let blocks = block_split_256_message(message);
 
@@ -173,8 +192,8 @@ pub fn encrypt_message_256(
 /// Notably *DOES NOT* perform the temporal seeding as defined in RFC-1.
 pub fn decrypt_message_256(
     ciphertext: Vec<u8>,
-    shift_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
-    transpose_automata: &mut Automaton<ToroidalBitMatrix<u8>>,
+    shift_automata: &mut TalosAutomaton,
+    transpose_automata: &mut TalosAutomaton,
 ) -> Vec<u8> {
     let blocks = block_split_256_message(ciphertext);
     blocks
@@ -186,8 +205,8 @@ pub fn decrypt_message_256(
 /// Performs temporal seeding across `automata` using the method described in RFC-1. `key` is the
 /// 32-bit key used for seeding, and `seed_position` maps bit indices in `seed` to (potentially
 /// multiple) `MatrixIndices`.
-pub fn temporal_seed_automata(
-    automaton: &mut Automaton<ToroidalBitMatrix<u8>>,
+pub fn temporal_seed_automaton(
+    automaton: &mut TalosAutomaton,
     key: u32,
     seed_positions: &[Vec<ToroidalMatrixIndex>],
 ) {
@@ -199,4 +218,28 @@ pub fn temporal_seed_automata(
         }
     }
     automaton.iter_rule(8);
+}
+
+/// Reads 4 bit values at `idx0`, `idx`, `idx2`, `idx3`, in `matrix`, then concatenates them into a
+/// `u8`.
+pub fn read_4_bits<T>(
+    matrix: &T,
+    idx0: ToroidalMatrixIndex,
+    idx1: ToroidalMatrixIndex,
+    idx2: ToroidalMatrixIndex,
+    idx3: ToroidalMatrixIndex,
+) -> u8
+where
+    T: ToroidalBinaryMatrix,
+{
+    let mut result: u8 = 0;
+    for (i, idx) in [idx0, idx1, idx2, idx3].iter().enumerate() {
+        result += if matrix.at(idx) {
+            2_u8.pow(i as u32)
+        } else {
+            0
+        };
+    }
+
+    result
 }
