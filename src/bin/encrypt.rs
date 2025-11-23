@@ -4,7 +4,7 @@ use rand::random;
 use std::error::Error;
 use std::fmt;
 use std::fs;
-use talos::{encrypt, parse};
+use talos::encrypt;
 
 #[derive(Parser, Debug)]
 struct EncryptArgs {
@@ -19,6 +19,7 @@ enum EncryptError {
     FileReadError(),
     FileWriteError(),
 }
+
 impl Error for EncryptError {}
 impl fmt::Display for EncryptError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -40,27 +41,14 @@ fn main() -> Result<(), EncryptError> {
         None => random::<u32>(),
     };
 
-    let mut char_map = parse::gen_char_map(seed);
-    char_map.insert('#', true);
-    char_map.insert('.', false);
-
-    let (maybe_t_automaton, maybe_s_automaton) = encrypt::get_transpose_shift_automata(char_map);
-
-    let mut t_automaton = maybe_t_automaton.unwrap();
-    let mut s_automaton = maybe_s_automaton.unwrap();
-
-    let t_temporal_seed_map = parse::get_temporal_seed_map(encrypt::T_INIT_MATRIX);
-    let s_temporal_seed_map = parse::get_temporal_seed_map(encrypt::S_INIT_MATRIX);
-
-    encrypt::temporal_seed_automaton(&mut t_automaton, seed, &t_temporal_seed_map);
-    encrypt::temporal_seed_automaton(&mut s_automaton, seed, &s_temporal_seed_map);
-
     let input_buffer = match fs::read(args.input) {
         Ok(buffer) => buffer,
         Err(_) => {
             return Err(EncryptError::FileReadError());
         }
     };
+
+    let (mut s_automaton, mut t_automaton) = encrypt::get_transpose_shift_automata(seed);
 
     eprintln!("Using key {}", seed);
     let now = std::time::Instant::now();

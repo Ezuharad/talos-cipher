@@ -41,16 +41,7 @@ fn main() -> Result<(), DecryptError> {
     char_map.insert('#', true);
     char_map.insert('.', false);
 
-    let (maybe_t_automaton, maybe_s_automaton) = encrypt::get_transpose_shift_automata(char_map);
-
-    let mut t_automaton = maybe_t_automaton.unwrap();
-    let mut s_automaton = maybe_s_automaton.unwrap();
-
-    let t_temporal_seed_map = parse::get_temporal_seed_map(encrypt::T_INIT_MATRIX);
-    let s_temporal_seed_map = parse::get_temporal_seed_map(encrypt::S_INIT_MATRIX);
-
-    encrypt::temporal_seed_automaton(&mut t_automaton, seed, &t_temporal_seed_map);
-    encrypt::temporal_seed_automaton(&mut s_automaton, seed, &s_temporal_seed_map);
+    let (mut s_automaton, mut t_automaton) = encrypt::get_transpose_shift_automata(seed);
 
     let input_buffer = match fs::read(args.input) {
         Ok(buffer) => buffer,
