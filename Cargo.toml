@@ -8,8 +8,12 @@ name = "talos"
 path = "src/lib.rs"
 
 [[bin]]
-name = "crypt"
-path = "src/bin/crypt.rs"
+name = "encrypt"
+path = "src/bin/encrypt.rs"
+
+[[bin]]
+name = "decrypt"
+path = "src/bin/decrypt.rs"
 
 [[bin]]
 name = "test_count"

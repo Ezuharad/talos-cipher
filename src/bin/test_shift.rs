@@ -67,7 +67,7 @@ fn main() {
 
         let mut automaton = automata::Automaton::new(state, rule);
         if !args.no_temporal_seed {
-            encrypt::temporal_seed_automata(&mut automaton, seed, &temporal_seed_map);
+            encrypt::temporal_seed_automaton(&mut automaton, seed, &temporal_seed_map);
         }
 
         let mut final_generation = args.generations;
