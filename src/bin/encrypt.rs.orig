@@ -1,26 +1,32 @@
-// 2025 Steven Chiacchira
+// 2025 Steven Chiacchiraenc
 use clap::Parser;
 use std::error::Error;
 use std::fmt;
 use std::fs;
+<<<<<<< Updated upstream
+use talos::encrypt;
+||||||| Stash base
+use talos::{encrypt, parse};
+=======
 use talos::{encrypt, key, parse};
+>>>>>>> Stashed changes
 
 #[derive(Parser, Debug)]
-struct DecryptArgs {
+struct EncryptArgs {
     input: String,
     out: String,
     #[arg(short, long)]
-    key: key::KeyArgument
+    key: Option<key::KeyArgument>
 }
 
 #[derive(Debug)]
-enum DecryptError {
+enum EncryptError {
     FileReadError(),
     FileWriteError(),
 }
 
-impl Error for DecryptError {}
-impl fmt::Display for DecryptError {
+impl Error for EncryptError {}
+impl fmt::Display for EncryptError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::FileReadError() => {
@@ -33,36 +39,32 @@ impl fmt::Display for DecryptError {
     }
 }
 
-fn main() -> Result<(), DecryptError> {
-    let args = DecryptArgs::parse();
-    let seed = args.key.get();
-
-    let mut char_map = parse::gen_char_map(seed);
-    char_map.insert('#', true);
-    char_map.insert('.', false);
-
-    let (mut s_automaton, mut t_automaton) = encrypt::get_transpose_shift_automata(seed);
+fn main() -> Result<(), EncryptError> {
+    let args = EncryptArgs::parse();
+    let seed = args.key.unwrap_or(key::KeyArgument::None).get();
 
     let input_buffer = match fs::read(args.input) {
         Ok(buffer) => buffer,
         Err(_) => {
-            return Err(DecryptError::FileReadError());
+            return Err(EncryptError::FileReadError());
         }
     };
+
+    let (mut s_automaton, mut t_automaton) = encrypt::get_transpose_shift_automata(seed);
 
     eprintln!("Using key {}", seed);
     let now = std::time::Instant::now();
     let output_bytes =
-        encrypt::decrypt_message_256(input_buffer, &mut s_automaton, &mut t_automaton);
+        encrypt::encrypt_message_256(input_buffer, &mut s_automaton, &mut t_automaton);
 
     eprintln!(
-        "Finished decrypting in {} miliseconds",
+        "Finished encrypting in {} miliseconds",
         now.elapsed().as_millis()
     );
 
     let result = fs::write(args.out, output_bytes);
     match result {
         Ok(_) => Ok(()),
-        Err(_) => Err(DecryptError::FileWriteError()),
+        Err(_) => Err(EncryptError::FileWriteError()),
     }
 }

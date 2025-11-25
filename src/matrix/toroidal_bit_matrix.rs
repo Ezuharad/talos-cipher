@@ -1,17 +1,17 @@
 // 2025 Steven Chiacchira
+use crate::key;
 use crate::matrix::{
     MatrixConstructError, MatrixOpError, ToroidalBinaryMatrix, ToroidalMatrixIndex,
 };
-use num_traits;
 
 #[derive(Debug, Clone)]
-pub struct ToroidalBitMatrix<T: num_traits::Unsigned + num_traits::PrimInt> {
+pub struct ToroidalBitMatrix<T: key::Key> {
     pub rows: usize,
     pub cols: usize,
     storage: Vec<T>,
 }
 
-impl<T: num_traits::Unsigned + num_traits::PrimInt> ToroidalBinaryMatrix for ToroidalBitMatrix<T> {
+impl<T: key::Key> ToroidalBinaryMatrix for ToroidalBitMatrix<T> {
     fn get_rows(&self) -> usize {
         self.rows
     }
@@ -87,7 +87,7 @@ impl<T: num_traits::Unsigned + num_traits::PrimInt> ToroidalBinaryMatrix for Tor
     }
 }
 
-impl<T: num_traits::Unsigned + num_traits::PrimInt> ToroidalBitMatrix<T> {
+impl<T: key::Key> ToroidalBitMatrix<T> {
     pub fn get_storage(&self) -> &Vec<T> {
         &self.storage
     }

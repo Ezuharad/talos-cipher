@@ -1,17 +1,16 @@
 // 2025 Steven Chiacchiraenc
 use clap::Parser;
-use rand::random;
 use std::error::Error;
 use std::fmt;
 use std::fs;
-use talos::encrypt;
+use talos::{encrypt, key};
 
 #[derive(Parser, Debug)]
 struct EncryptArgs {
     input: String,
     out: String,
     #[arg(short, long)]
-    key: Option<u32>,
+    key: Option<key::KeyArgument>
 }
 
 #[derive(Debug)]
@@ -36,10 +35,7 @@ impl fmt::Display for EncryptError {
 
 fn main() -> Result<(), EncryptError> {
     let args = EncryptArgs::parse();
-    let seed = match args.key {
-        Some(seed) => seed,
-        None => random::<u32>(),
-    };
+    let seed = args.key.unwrap_or(key::KeyArgument::None).get();
 
     let input_buffer = match fs::read(args.input) {
         Ok(buffer) => buffer,
