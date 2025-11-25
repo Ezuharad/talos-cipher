@@ -3,7 +3,7 @@ use crate::matrix::{ToroidalBinaryMatrix, ToroidalMatrixIndex};
 use std::fmt;
 use std::mem;
 
-/// The character used to represent an [`Automaton`]'s `true` state in files and String
+/// The character used to represent an [`Automaton`]'s `true` state in files and `String`
 /// representations.
 const TRUE_CHAR: char = '#';
 /// The character used to represent an [`Automaton`]'s `false` state in files and String
@@ -101,8 +101,8 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
 /// Will be represented as
 /// ```txt
 /// #..#
-/// TFTT
-/// TTTT
+/// #.##
+/// ####
 /// ```
 impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for Automaton<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
