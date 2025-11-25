@@ -35,6 +35,8 @@ pub struct AutomatonRule {
 
 #[derive(Debug)]
 /// Defines a 2D, binary cellular automaton on a torus.
+///
+/// Uses a type `T` implementing `ToroidalBinaryMatrix` to store its state.
 pub struct Automaton<T: ToroidalBinaryMatrix> {
     /// The automaton rule the Automaton will follow.
     rule: AutomatonRule,
