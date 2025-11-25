@@ -4,6 +4,7 @@ use crate::matrix::{
 };
 
 #[derive(Debug, Clone)]
+/// Struct implementing [`ToroidalBinaryMatrix`] backed by a `Vec<bool>`.
 pub struct ToroidalBoolMatrix {
     pub rows: usize,
     pub cols: usize,
@@ -82,12 +83,32 @@ impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
 }
 
 impl ToroidalBoolMatrix {
-    /// Returns the storage backing the matrix.
+    /// Returns the storage backing the Matrix.
+    ///
+    /// # Returns
+    /// The storage backing the Matrix.
     pub fn get_storage(&self) -> &Vec<bool> {
         &self.storage
     }
     /// Constructs a new [`ToroidalBoolMatrix`] from storage, as well as the count of rows and
-    /// columns. Returns an error if the storage is the wrong size for the specified matrix shape.
+    /// columns.
+    ///
+    /// The following criteria must be met for Matrix construction:
+    /// * $rows > 0 \land cols > 0$
+    /// * $rows * cols$ = storage.size()
+    ///
+    /// See [`MatrixConstructError`] for possible error variants resulting from violating these
+    /// criteria.
+    ///
+    /// # Arguments
+    /// * `rows` - the number of rows the Matrix will have
+    /// * `cols` - the number of columns the Matrix will have
+    /// * `storage` the storage backing the Matrix. Note that elements are stored in row-major
+    ///   order.
+    ///
+    /// # Returns
+    /// A newly constructed Matrix if the storage, rows, and columns are valid, and a
+    /// [`MatrixConstructError`] otherwise.
     pub fn from_storage(
         rows: usize,
         cols: usize,
