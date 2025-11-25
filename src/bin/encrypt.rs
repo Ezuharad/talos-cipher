@@ -6,16 +6,26 @@ use std::fs;
 use talos::{encrypt, key};
 
 #[derive(Parser, Debug)]
+#[command(version, about, long_about=None)]
+/// CLI tool for encryption using the Talos encryption protocol.
 struct EncryptArgs {
+    /// The file to be encrypted
     input: String,
+    /// The file path to save ciphertext to
     out: String,
     #[arg(short, long)]
-    key: Option<key::KeyArgument>
+    /// The encryption key to be used. If a numerical input is given, it will be used as the
+    /// encryption key. If a string is given, it will be used to deterministically generate a key
+    /// using SHA2567. If no key is given, a random key will be used and displayed to the user.
+    key: Option<key::KeyArgument>,
 }
 
 #[derive(Debug)]
+/// Possible error states for CLI encryption.
 enum EncryptError {
+    /// An error occurred reading the specified plaintext file.
     FileReadError(),
+    /// An error occurred writing to the specified output file.
     FileWriteError(),
 }
 

@@ -8,14 +8,30 @@ use sha2::{Digest, Sha256};
 pub trait Key = num_traits::PrimInt + num_traits::Unsigned;
 
 #[derive(Debug, Clone)]
+/// Enum of possible input key values. Used for the encryption and decryption CLI interfaces.
+///
+/// Allows for computing encryption keys from Strings and unsigned integers.
 pub enum KeyArgument {
+    /// A string to be used to generate an encryption key.
     String(String),
+    /// A number to be used as an encryption key.
     Num(u32),
+    /// No encryption key provided, indicating that one should be generated.
     None,
 }
 
 impl KeyArgument {
-    pub fn get(&self) -> u32 {
+    /// Computes or generates an encryption key.
+    ///
+    /// The following three behavior variants are possible:
+    /// * If `KeyArgument` is a `KeyArgument::String`, an encryption key will be deterministically
+    ///   generated via sha256. See [`sha2`] crate for details.
+    /// * If `KeyArgument` is a `KeyArgument::Num`, its value will be used as an encryption key.
+    /// * If `KeyArgument` is a `KeyArgument::None`, a random key will be generated.
+    ///
+    /// # Returns
+    /// An encryption key.
+    pub fn get(self) -> u32 {
         match self {
             Self::String(key) => {
                 let mut hasher = Sha256::new();
@@ -25,7 +41,7 @@ impl KeyArgument {
                 let first_four_bytes: [u8; 4] = bytes[0..4].try_into().unwrap();
                 u32::from_le_bytes(first_four_bytes)
             }
-            Self::Num(key) => *key,
+            Self::Num(key) => key,
             Self::None => rand::random::<u32>(),
         }
     }
@@ -41,4 +57,3 @@ impl FromStr for KeyArgument {
             .unwrap_or_else(|_| KeyArgument::String(s.to_string())))
     }
 }
-

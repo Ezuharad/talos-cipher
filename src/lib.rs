@@ -12,7 +12,7 @@ pub mod automata;
 pub mod bitwise;
 /// High-level subroutines for encryption per the Talos protocol.
 pub mod encrypt;
-/// TODO!
+/// Utilities for getting encryption keys from users. Supports String keys via SHA-256.
 pub mod key;
 /// Module implementing binary matrix interfaces and implementations.
 pub mod matrix;
