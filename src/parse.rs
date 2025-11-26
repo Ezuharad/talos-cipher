@@ -14,12 +14,12 @@ pub enum TableReadError {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```text
     /// a.b.c.d
     /// c.d#e#f
     /// ```
     /// is *ALLOWED* because each row has the same number of characters. Conversely,
-    /// ```
+    /// ```text
     /// a.b
     /// c#d#e.f
     /// ```
@@ -86,7 +86,7 @@ pub fn gen_char_map(seed: u32) -> HashMap<char, bool> {
 ///
 /// # Examples
 /// Given `char_map = { '#': true, '.': false }`:
-/// ```txt
+/// ```text
 /// .....
 /// ..#..
 /// ...#.
@@ -94,7 +94,7 @@ pub fn gen_char_map(seed: u32) -> HashMap<char, bool> {
 /// ```
 ///
 /// specifies the table
-/// ```txt
+/// ```text
 /// FFFFF
 /// FFTFF
 /// FFFTF
@@ -121,22 +121,22 @@ pub fn parse_bool_table(
 }
 
 /// Given a string representing an initial matrix state with base-32 digits for variable values,
-/// returns a vector X, where X[i] is the set of ToroidalMatrixIndices of the base-32
+/// returns a vector X, where X\[i\] is the set of ToroidalMatrixIndices of the base-32
 /// representation of `i` in the string.
 ///
 /// See section 2.1 of RFC-1 for details on where this method is used.
-/// See also [`get_char_indices`] for details on obtaining the ToroidalMatrixIndices from `string`.
-/// See also [`BASE_32_DIGITS`] for information on base-32 counting.
+/// See also [`get_char_indices`](crate::parse) for details on obtaining the ToroidalMatrixIndices from `string`.
+/// See also [`BASE_32_DIGITS`](crate::parse) for information on base-32 counting.
 ///
 /// # Arguments
-/// * `string` - the string to find ToroidalMatrixIndices in
+/// * `string` - the string to find the ToroidalMatrixIndices of base-32 digits in
 ///
 /// # Returns
 /// A vector containing the ToroidalMatrixIndices for each base-32 digit in `string`
 ///
 /// # Examples
 /// For `string`
-/// ```
+/// ```text
 /// A.A.B
 /// ##A.A
 /// ```
@@ -162,7 +162,7 @@ pub fn get_temporal_seed_map(string: &str) -> Vec<Vec<ToroidalMatrixIndex>> {
 ///
 /// # Examples
 /// For `string`
-/// ```
+/// ```text
 /// A.A.B
 /// ##A.A
 /// ```

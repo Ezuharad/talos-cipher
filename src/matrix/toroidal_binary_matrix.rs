@@ -30,7 +30,7 @@ pub enum MatrixConstructError {
     ///
     /// # Examples
     /// The table with initial state:
-    /// ```
+    /// ```text
     /// [
     ///     [true, true, true],
     ///     [false, true, true]
@@ -38,7 +38,7 @@ pub enum MatrixConstructError {
     /// ```
     ///
     /// is *ALLOWED*, because each row has 3 elements. Conversely,
-    /// ```
+    /// ```text
     /// [
     ///     [true, true, true],
     ///     [false]
@@ -55,8 +55,8 @@ pub enum MatrixConstructError {
     EmptyTable(),
     /// A Matrix should have precisely enough elements to store its entries. Use of this variant is
     /// not *required* for implementing the [`ToroidalBinaryMatrix`] trait. See
-    /// * [`ToroidalBoolMatrix::from_storage`]
-    /// * [`ToroidalBitMatrix::from_storage`]
+    /// * [`ToroidalBoolMatrix::from_storage`](crate::matrix)
+    /// * [`ToroidalBitMatrix::from_storage`](crate::matrix)
     ///
     /// for methods which use this enum variant.
     InvalidStorage(),

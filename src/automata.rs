@@ -13,7 +13,7 @@ const FALSE_CHAR: char = '.';
 #[derive(Clone, Debug)]
 /// Defines how an [`Automaton`] will change from one state to the next.
 ///
-/// This struct is limited to symmetrical cellular automaton rules defined over a (Moore Neighborhood)[https://en.wikipedia.org/wiki/Moore_neighborhood].
+/// This struct is limited to symmetrical cellular automaton rules defined over a (Moore Neighborhood)[<https://en.wikipedia.org/wiki/Moore_neighborhood>].
 /// Roughly speaking, a cellular automaton rule is symmetric if it only considers the *number* of
 /// alive and dead neighbors for a given cell.
 pub struct AutomatonRule {
