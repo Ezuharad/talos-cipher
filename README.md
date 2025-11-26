@@ -6,14 +6,14 @@ This is the code and RFC for a novel encryption algorithm based on cellular auto
 The rust implementation of our encryption algorithm can be built using cargo, installed via [rustup](https://rustup.rs/). Once cargo has been installed, the project can be built with `cargo build --release` from the project root.
 
 ### Encryption and Decryption
-The current CLI tool for encryption is called `crypt`. To encrypt a file, one would use:
+The current CLI tool for encryption is called `encrypt`. To encrypt a file, one would use:
 ```zsh
-./crypt --encrypt --key <KEY> path/to/plain.txt -o encrypted.enc
+cargo run --bin encrypt path/to/plain.txt encrypted.enc -k <KEY>
 ```
 
-`crypt` should automatically generate and print a key to stderr if one is not provided. Decryption is achievable with
+`encrypt` should automatically generate and print a key to stderr if one is not provided. Decryption is achievable with
 ```zsh
-./crypt --decrypt --key <KEY> path/to/encrypted.enc -o plain.txt
+cargo run --bin decrypt path/to/encrypted.enc plain.txt -k <KEY>
 ```
 
 ### PyTorch Implementation

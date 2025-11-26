@@ -3,26 +3,50 @@ use crate::automata::{Automaton, AutomatonRule};
 use crate::matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalMatrixIndex};
 use crate::parse;
 
+/// Number of rows in a matrix for the Talos encryption protocol.
 pub const N_ROWS: usize = 16;
+/// Number of columns in a matrix for the Talos encryption protocol.
 pub const N_COLS: usize = 16;
+/// Number of elements in an encryption block for the Talos encryption protocol.
 pub const BLOCK_SIZE: usize = N_ROWS * N_COLS;
 
+/// Initialization string for Transpose Matrix. See RFC-0 section 2.2.1 for details.
 pub const T_INIT_MATRIX: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/data/init_matrix/T_init_matrix.txt"
 ));
+/// Initialization string for Shift Matrix. See RFC-0 section 2.2.1 for details.
 pub const S_INIT_MATRIX: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/data/init_matrix/S_init_matrix.txt"
 ));
+/// Automata rule used in the Talos encryption protocol. See RFC-0 section 2.2.2 for details.
 pub const AUTOMATA_RULE: AutomatonRule = AutomatonRule {
     born: [false, false, true, true, true, true, true, false, false],
     dies: [true, true, false, false, false, true, true, true, true],
 };
 
+/// Number of iterations to perform for each encryption block.
+const N_ITERS_PER_BLOCK: u32 = 11;
+
+/// A ToroidalBitMatrix backed by a `Vec<u8>`. Allows for quick reading of character values.
 pub type TalosMatrix = ToroidalBitMatrix<u8>;
+/// A cellular automaton using a ToroidalBitMatrix backed by a `Vec<u8>`.
 pub type TalosAutomaton = Automaton<TalosMatrix>;
 
+/// Prepares and returns the transpose and shift automata proposed in RFC-0 section 2.
+///
+/// Performs:
+/// * initialization based on the initial matrices proposed in RFC-0 section 2.2.1
+/// * temporal seeding proposed in RFC-1 section 2.1
+///
+/// for both the shift and transpose automata.
+///
+/// # Arguments
+/// * `seed` - the seed to use for automaton initialization and temporal seeding.
+///
+/// # Returns
+/// A tuple containing the initialized transpose and shift automata.
 pub fn get_transpose_shift_automata(seed: u32) -> (TalosAutomaton, TalosAutomaton) {
     let mut char_map = parse::gen_char_map(seed);
     char_map.insert('#', true);
@@ -46,8 +70,20 @@ pub fn get_transpose_shift_automata(seed: u32) -> (TalosAutomaton, TalosAutomato
     (s_automaton, t_automaton)
 }
 
-/// Encrypts a byte message with a 256 bit block using the Talos algorithm.
-/// Notably *DOES NOT* perform the temporal seeding as defined in RFC-1.
+/// Encrypts a message with a 256 bit block using the Talos algorithm.
+///
+/// <div class="warning">
+/// *DOES NOT* perform the temporal seeding as defined in RFC-1 section 2.1.
+/// Matrix initialization is performed by other methods. See [`get_transpose_shift_automata`].
+/// </div>
+///
+/// # Arguments
+/// * `message` - the plaintext to be encrypted as a vector of bytes
+/// * `shift_automata` - the initial automaton to be used for shifting during decryption
+/// * `transpose_automata` - the initial automaton to be used for scrambling during decryption
+///
+/// # Returns
+/// The encrypted message as a vector of bytes.
 pub fn encrypt_message_256(
     message: Vec<u8>,
     shift_automata: &mut TalosAutomaton,
@@ -62,7 +98,19 @@ pub fn encrypt_message_256(
 }
 
 /// Decrypts a message with a 256 bit block using the Talos algorithm.
-/// Notably *DOES NOT* perform the temporal seeding as defined in RFC-1.
+///
+/// <div class="warning">
+/// *DOES NOT* perform the temporal seeding as defined in RFC-1 section 2.1.
+/// Matrix initialization is performed by other methods. See [`get_transpose_shift_automata`].
+/// </div>
+///
+/// # Arguments
+/// * `ciphertext` - the ciphertext to be decrypted as a vector of bytes
+/// * `shift_automata` - the initial automaton to be used for shifting during decryption
+/// * `transpose_automata` - the initial automaton to be used for unscrambling during decryption
+///
+/// # Returns
+/// The decrypted message as a vector of bytes.
 pub fn decrypt_message_256(
     ciphertext: Vec<u8>,
     shift_automata: &mut TalosAutomaton,
@@ -75,12 +123,12 @@ pub fn decrypt_message_256(
         .collect()
 }
 
-const N_ITERS_PER_BLOCK: u32 = 11;
-
-/// Applies the matrix scrambling algorithm $V$ explained in RFC-0.
-fn scramble_matrix_256<T>(message_matrix: &mut T, key: &T)
-where
-    T: ToroidalBinaryMatrix,
+/// Applies the matrix scrambling algorithm $V$ explained in RFC-0 section 2.2.3.
+///
+/// # Arguments
+/// * `message_matrix` - the matrix to scramble with $V$. Modified inplace
+/// * `key` - the key to use for unscrambling
+fn scramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T)
 {
     for row_block in 0..4 {
         // iterate over each row in the 'row block' and swap
@@ -114,10 +162,12 @@ where
     }
 }
 
-/// Applies the inverse matrix scrambling algorithm $V^(-1)$ explained in RFC-0.
-fn unscramble_matrix_256<T>(message_matrix: &mut T, key: &T)
-where
-    T: ToroidalBinaryMatrix,
+/// Applies the inverse matrix scrambling algorithm $V^(-1)$ explained in RFC-0 section 2.2.3.
+///
+/// # Arguments
+/// * `message_matrix` - the matrix to unscramble with $V^(-1)$. Modified inplace
+/// * `key` - the key to use for unscrambling
+fn unscramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T)
 {
     for col_block in (0..4).rev() {
         // iterate over each col in the 'col block' and swap
@@ -152,8 +202,16 @@ where
     }
 }
 
-/// Splits `message` into 256 bit blocks, represented as flat vectors.
-/// The final block of `message` is not padded to 256 bits.
+/// Splits `message` into 256 bit blocks, represented as flat vectors of bytes.
+///
+/// Each element of the result will contain 32 `u8s`.
+/// The final block of `message` is padded to 256 bits.
+///
+/// # Arguments
+/// * `message` - the message to split into blocks
+///
+/// # Returns
+/// `message` split into blocks containing 256 bits (32 u8s).
 fn block_split_256_message(message: Vec<u8>) -> Vec<Vec<u8>> {
     let u8s_per_block = BLOCK_SIZE / u8::BITS as usize;
     let mut blocks: Vec<Vec<u8>> = message.chunks(u8s_per_block).map(|c| c.to_vec()).collect();
@@ -182,6 +240,14 @@ fn encrypt_block_256(
 }
 
 /// Decrypts a 256 bit message block with the Talos algorithm.
+///
+/// # Arguments
+/// * `encrypted_block` - the block to decrypt as a vector of bytes
+/// * `shift_automata` - the Automaton to use as the shift automaton
+/// * `transpose_automata` - the Automaton to use for the scrambling algorithm
+/// 
+/// # Returns
+/// The decrypted ciphertext block as a vector of bytes.
 fn decrypt_block_256(
     encrypted_block: Vec<u8>,
     shift_automata: &mut TalosAutomaton,
@@ -197,9 +263,14 @@ fn decrypt_block_256(
     message_matrix.get_storage().to_vec()
 }
 
-/// Performs temporal seeding across `automata` using the method described in RFC-1. `key` is the
-/// 32-bit key used for seeding, and `seed_position` maps bit indices in `seed` to (potentially
-/// multiple) `MatrixIndices`.
+/// Performs temporal seeding as described in RFC-1 section 2.1.
+///
+/// # Arguments
+/// * `automaton` - the Automaton to be seeded.
+/// * `key` - the key to use for temporal seeding.
+/// * `seed_positions` - a vector containing the ToroidalMatrixIndices to seed each key bit at.
+///   `seed_positions[i]` contains the ToroidalMatrixIndices in `automaton` which will be set to
+///   `key` bit `i`.
 pub fn temporal_seed_automaton(
     automaton: &mut TalosAutomaton,
     key: u32,
@@ -217,15 +288,27 @@ pub fn temporal_seed_automaton(
 
 /// Reads 4 bit values at `idx0`, `idx`, `idx2`, `idx3`, in `matrix`, then concatenates them into a
 /// `u8`.
-pub fn read_4_bits<T>(
+///
+/// # Arguments
+/// * `matrx` - the matrix to read from.
+/// * `idx0` - the first index to read a bit value from.
+/// * `idx1` - the second index to read a bit value from.
+/// * `idx2` - the third index to read a bit value from.
+/// * `idx3` - the fourth index to read a bit value from.
+///
+/// # Returns
+/// The concatenation of the read values as a `u8`.
+///
+/// # Examples
+/// Given that the values [0, 1, 1, 0] are read for `idx0`, `idx1`, `idx2`, `idx3` respectively,
+/// returns the value `6`, or `01100000` in binary.
+pub fn read_4_bits<T: ToroidalBinaryMatrix>(
     matrix: &T,
     idx0: ToroidalMatrixIndex,
     idx1: ToroidalMatrixIndex,
     idx2: ToroidalMatrixIndex,
     idx3: ToroidalMatrixIndex,
 ) -> u8
-where
-    T: ToroidalBinaryMatrix,
 {
     let mut result: u8 = 0;
     for (i, idx) in [idx0, idx1, idx2, idx3].iter().enumerate() {
