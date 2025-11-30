@@ -59,7 +59,7 @@ impl<T: key::Key> BitWise for T {
 
 #[cfg(test)]
 mod tests {
-    use super::BitWise;
+    use crate::bitwise::BitWise;
 
     #[test]
     fn test_n_bits() {
