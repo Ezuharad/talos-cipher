@@ -9,8 +9,8 @@ use crate::matrix::{
 /// Struct implementing [`ToroidalBinaryMatrix`] backed by a `Vec<T>`. `T` must be an unsigned
 /// integer primitive such as `u8` or `u64`.
 pub struct ToroidalBitMatrix<T: key::Key> {
-    pub rows: usize,
-    pub cols: usize,
+    rows: usize,
+    cols: usize,
     storage: Vec<T>,
 }
 
@@ -123,7 +123,7 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
         cols: usize,
         mut storage: Vec<T>,
     ) -> Result<Self, MatrixConstructError> {
-        if rows == 0 || cols == 0 || storage.len() == 0 {
+        if rows == 0 || cols == 0 || storage.is_empty() {
             return Err(MatrixConstructError::EmptyTable());
         }
         let bits_per_t = T::n_bits();
