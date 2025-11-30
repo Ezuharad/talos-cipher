@@ -24,6 +24,10 @@ use std::fmt;
 pub type ToroidalMatrixIndex = (isize, isize);
 
 /// Error occurring during Matrix initialization
+///
+/// If a table is both [ragged](MatrixConstructError::RaggedTable) *and*
+/// [empty](MatrixConstructError::EmptyTable) (contains an empty row), the EmptyTable enum variant
+/// takes precedence.
 #[derive(Debug)]
 pub enum MatrixConstructError {
     /// Every row of the table used to define a Matrix's initial state must have the same number of columns
@@ -52,6 +56,8 @@ pub enum MatrixConstructError {
     /// A $1 \times 1$ Matrix is *ALLOWED*
     /// A $0 \times 0$ Matrix is *NOT ALLOWED*
     /// A $0 \times 5$ Matrix is *NOT ALLOWED*
+    ///
+    /// Takes precedence over the [`MatrixConstructError::RaggedTable`] enum variant.
     EmptyTable(),
     /// A Matrix should have precisely enough elements to store its entries. Use of this variant is
     /// not *required* for implementing the [`ToroidalBinaryMatrix`] trait. See
@@ -120,7 +126,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// * `table` is nonempty, and its rows are nonempty.
     ///
     /// See [`MatrixConstructError`] for possible error variants resulting from violating these
-    /// criteria.
+    /// criteria, as well as how edge cases are handled.
     ///
     /// # Arguments
     /// * `table` - a table of booleans representing the inital Matrix state

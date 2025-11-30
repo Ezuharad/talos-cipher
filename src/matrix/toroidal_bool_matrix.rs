@@ -25,11 +25,17 @@ impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
             return Err(MatrixConstructError::EmptyTable());
         }
 
-        // if the table is ragged (every column is not the same size) then we reject the input and return an Err result
         if table
             .iter()
-            .map(|row| row.len() != cols)
-            .fold(false, |a, b| a | b)
+            .any(|row| row.is_empty())
+        {
+            return Err(MatrixConstructError::EmptyTable());
+        }
+
+        let cols = table[0].len();
+        if table
+            .iter()
+            .any(|row| row.len() != cols)
         {
             return Err(MatrixConstructError::RaggedTable());
         }

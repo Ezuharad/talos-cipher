@@ -1,5 +1,5 @@
-use crate::bitwise::BitWise;
 // 2025 Steven Chiacchira
+use crate::bitwise::BitWise;
 use crate::key;
 use crate::matrix::{
     MatrixConstructError, MatrixOpError, ToroidalBinaryMatrix, ToroidalMatrixIndex,
@@ -26,17 +26,13 @@ impl<T: key::Key> ToroidalBinaryMatrix for ToroidalBitMatrix<T> {
         if rows == 0 {
             return Err(MatrixConstructError::EmptyTable());
         }
-        let cols = table[0].len();
-        if cols == 0 {
+
+        if table.iter().any(|row| row.is_empty()) {
             return Err(MatrixConstructError::EmptyTable());
         }
 
-        // If the each row's is not equal to the first's, the table is invalid
-        if table
-            .iter()
-            .map(|row| row.len() != cols)
-            .fold(false, |a, b| a | b)
-        {
+        let cols = table[0].len();
+        if table.iter().any(|row| row.len() != cols) {
             return Err(MatrixConstructError::RaggedTable());
         }
 
@@ -169,5 +165,57 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
         let bit_idx = flat_bit_idx % bits_per_t;
 
         (element_idx, bit_idx)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::matrix::{MatrixConstructError, ToroidalBinaryMatrix, ToroidalBitMatrix};
+    #[test]
+    fn test_new_ok() {
+        let table_1 = vec![vec![false, false, false], vec![false, false, true]];
+        let table_2 = vec![vec![false], vec![true], vec![true], vec![true]];
+
+        let mat_1 = ToroidalBitMatrix::<u32>::new(table_1).unwrap();
+        let mat_2 = ToroidalBitMatrix::<u32>::new(table_2).unwrap();
+
+        assert_eq!(mat_1.get_rows(), 2);
+        assert_eq!(mat_1.get_cols(), 3);
+
+        assert_eq!(mat_2.get_rows(), 4);
+        assert_eq!(mat_2.get_cols(), 1);
+    }
+
+    #[test]
+    fn test_new_empty() {
+        let empty_table_1: std::vec::Vec<std::vec::Vec<bool>> = vec![];
+        let empty_table_2: std::vec::Vec<std::vec::Vec<bool>> = vec![vec![], vec![]];
+
+        let mat_1 = ToroidalBitMatrix::<u32>::new(empty_table_1);
+        let mat_2 = ToroidalBitMatrix::<u32>::new(empty_table_2);
+
+        assert!(matches!(mat_1, Err(MatrixConstructError::EmptyTable())));
+        assert!(matches!(mat_2, Err(MatrixConstructError::EmptyTable())));
+    }
+
+    #[test]
+    fn test_new_ragged() {
+        let ragged_table = vec![vec![false], vec![false, true]];
+
+        let mat_ragged = ToroidalBitMatrix::<u32>::new(ragged_table);
+
+        assert!(matches!(mat_ragged, Err(MatrixConstructError::RaggedTable())));
+    }
+
+    #[test]
+    fn test_new_empty_ragged() {
+        let table_1 = vec![vec![false], vec![false, true], vec![]];
+        let table_2 = vec![vec![], vec![false, true], vec![false]];
+
+        let mat_1 = ToroidalBitMatrix::<u32>::new(table_1);
+        let mat_2 = ToroidalBitMatrix::<u32>::new(table_2);
+
+        assert!(matches!(mat_1, Err(MatrixConstructError::EmptyTable())));
+        assert!(matches!(mat_2, Err(MatrixConstructError::EmptyTable())));
     }
 }
