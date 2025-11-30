@@ -1,0 +1,67 @@
+// 2025 Steven Chiacchira
+use std::fs;
+
+#[test]
+fn test_encrypt_decrypt_equal() {
+    let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
+    let message =
+        fs::read(message_file).expect("Could not find plaintext in data/tests directory.");
+    let message_size = message.len();
+
+    for i in 0..32 {
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+        let ciphertext = talos::encrypt::encrypt_message_256(
+            message.clone(),
+            &mut s_automaton,
+            &mut t_automaton,
+        );
+
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+        let decrypted =
+            talos::encrypt::decrypt_message_256(ciphertext, &mut s_automaton, &mut t_automaton);
+
+        // It is possible we will have leftover bits
+        assert_eq!(message, decrypted[..message_size]);
+    }
+}
+
+#[test]
+fn test_decrypt_breaking() {
+    let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
+    let message =
+        fs::read(message_file).expect("Could not find plaintext in data/tests directory.");
+    let message_size = message.len();
+
+    for i in 0..3 {
+        let encrypted_file = env!("CARGO_MANIFEST_DIR").to_owned()
+            + &format!("/data/tests/text_01_k{}.enc", i);
+        let ciphertext = fs::read(encrypted_file).expect("Could not find ciphertext in data/tests directory.");
+
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+        let decrypted =
+            talos::encrypt::decrypt_message_256(ciphertext, &mut s_automaton, &mut t_automaton);
+
+        assert_eq!(message, decrypted[..message_size]);
+    }
+}
+
+#[test]
+fn test_encrypt_breaking() {
+    let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
+    let message =
+        fs::read(message_file).expect("Could not find plaintext in data/tests directory.");
+    let message_size = message.len();
+
+    for i in 0..3 {
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+        let encrypted_message =
+            talos::encrypt::encrypt_message_256(message.clone(), &mut s_automaton, &mut t_automaton);
+
+        let encrypted_file = env!("CARGO_MANIFEST_DIR").to_owned()
+            + &format!("/data/tests/text_01_k{}.enc", i);
+        let ciphertext = fs::read(encrypted_file).expect("Could not find ciphertext in data/tests directory.");
+
+        assert_eq!(encrypted_message, ciphertext);
+    }
+}
+

@@ -10,22 +10,27 @@ path = "src/lib.rs"
 [[bin]]
 name = "encrypt"
 path = "src/bin/encrypt.rs"
+test = false
 
 [[bin]]
 name = "decrypt"
 path = "src/bin/decrypt.rs"
+test = false
 
 [[bin]]
 name = "test_count"
 path = "src/bin/test_count.rs"
+test = false
 
 [[bin]]
 name = "test_shift"
 path = "src/bin/test_shift.rs"
+test = false
 
 [[bin]]
 name = "test_transpose"
 path = "src/bin/test_transpose.rs"
+test = false
 
 
 [dependencies]
