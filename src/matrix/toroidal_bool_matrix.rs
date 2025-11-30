@@ -6,8 +6,8 @@ use crate::matrix::{
 #[derive(Debug, Clone)]
 /// Struct implementing [`ToroidalBinaryMatrix`] backed by a `Vec<bool>`.
 pub struct ToroidalBoolMatrix {
-    pub rows: usize,
-    pub cols: usize,
+    rows: usize,
+    cols: usize,
     storage: Vec<bool>,
 }
 
@@ -114,7 +114,7 @@ impl ToroidalBoolMatrix {
         cols: usize,
         storage: Vec<bool>,
     ) -> Result<Self, MatrixConstructError> {
-        if rows == 0 || cols == 0 || storage.len() == 0 {
+        if rows == 0 || cols == 0 || storage.is_empty() {
             return Err(MatrixConstructError::EmptyTable());
         }
         if storage.len() != rows * cols {
