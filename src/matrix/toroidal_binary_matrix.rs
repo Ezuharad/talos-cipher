@@ -28,6 +28,15 @@ pub type ToroidalMatrixIndex = (isize, isize);
 /// If a table is both [ragged](MatrixConstructError::RaggedTable) *and*
 /// [empty](MatrixConstructError::EmptyTable) (contains an empty row), the EmptyTable enum variant
 /// takes precedence.
+///
+/// If a from_storage constructor (such as
+/// [`ToroidalBitMatrix::from_storage`](crate::matrix::ToroidalBitMatrix::from_storage)) is called
+/// with either:
+/// * an empty `storage`
+/// * 0 `rows` or 0 `cols`
+///
+/// the [empty](MatrixConstructError::EmptyTable) enum variant will be returned over an
+/// [`InvalidStorage`](MatrixConstructError::InvalidStorage) enum variant.
 #[derive(Debug)]
 pub enum MatrixConstructError {
     /// Every row of the table used to define a Matrix's initial state must have the same number of columns
@@ -134,6 +143,40 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// # Returns
     /// A new instance of the implementing class with the state specified by `table`
     fn new(table: Vec<Vec<bool>>) -> Result<Self, MatrixConstructError>;
+    /// Creates a new rows $\times$ cols matrix containing only `false` entries.
+    ///
+    /// Note that if either `rows` or `cols` is zero, a [`MatrixConstructError::EmptyTable`] error
+    /// will be returned.
+    ///
+    /// See also [`ToroidalBinaryMatrix::ones`].
+    ///
+    /// # Arguments
+    /// * `rows` - a positive number of rows for the matrix to have
+    /// * `cols` - a positive number of columns for the matrix to have
+    ///
+    /// # Returns
+    /// A new rows $times$ cols matrix containing only `false` entries.
+    fn zeros(rows: usize, cols: usize) -> Result<Self, MatrixConstructError> {
+        let table = vec![vec![false; cols]; rows];
+        Self::new(table)
+    }
+    /// Creates a new rows $\times$ cols matrix containing only `true` entries.
+    ///
+    /// Note that if either `rows` or `cols` is zero, a [`MatrixConstructError::EmptyTable`] error
+    /// will be returned.
+    ///
+    /// See also [`ToroidalBinaryMatrix::zeros`].
+    ///
+    /// # Arguments
+    /// * `rows` - a positive number of rows for the matrix to have
+    /// * `cols` - a positive number of columns for the matrix to have
+    ///
+    /// # Returns
+    /// A new rows $times$ cols matrix containing only `true` entries.
+    fn ones(rows: usize, cols: usize) -> Result<Self, MatrixConstructError> {
+        let table = vec![vec![true; cols]; rows];
+        Self::new(table)
+    }
     /// Returns the number of rows the Matrix has.
     ///
     /// A Matrix will always have a positive (nonzero) number of rows.
@@ -317,4 +360,27 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// # Returns
     /// The number of `true` elements in the Matrix.
     fn popcount(&self) -> u32;
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix};
+    #[test]
+    fn test_canonize_index() {
+        let table = vec![vec![true, true, false], vec![true, true, false]];
+
+        let mat_1 = ToroidalBitMatrix::<u32>::new(table).unwrap();
+
+        assert_eq!(mat_1.canonize_index((0, 0)), (0, 0));
+        assert_eq!(mat_1.canonize_index((1, 0)), (1, 0));
+        assert_eq!(mat_1.canonize_index((0, 2)), (0, 2));
+
+        assert_eq!(mat_1.canonize_index((2, 0)), (0, 0));
+        assert_eq!(mat_1.canonize_index((0, 3)), (0, 0));
+        assert_eq!(mat_1.canonize_index((2, 3)), (0, 0));
+
+        assert_eq!(mat_1.canonize_index((-1, 0)), (1, 0));
+        assert_eq!(mat_1.canonize_index((0, -1)), (0, 2));
+        assert_eq!(mat_1.canonize_index((-1, -1)), (1, 2));
+    }
 }

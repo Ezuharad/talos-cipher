@@ -94,18 +94,21 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
     pub fn get_storage(&self) -> &Vec<T> {
         &self.storage
     }
-    /// Constructs a new [`ToroidalBitMatrix`] from stroage, as well as the count of rows and
-    /// columns.
+    /// Constructs a new [`ToroidalBitMatrix`] from storage in row-major fashion, as well as the count
+    /// of rows and columns.
+    ///
+    /// Because `storage` contains bits in chunks of size `T::BITS`, it is possible that `rows` *
+    /// `cols` will be greater than the number of bits in `storage`. In this case, extra bits at
+    /// the end of the vector will be zeroed.
     ///
     /// The following criteria must be met for Matrix construction:
     /// * $rows > 0 \land cols > 0$
     /// * $rows * cols \geq$ storage.size() * `T::BITS` $land rows * cols \lt$ (storage.size() + 1) *
     ///   `T::BITS`
     ///
-    /// Where T::BITS is the number of bits in the unsigned integer type `T`.
-    ///
-    /// See [`MatrixConstructError`] for possible error variants resulting from violating thee
-    /// criteria.
+    /// Where T::BITS is the number of bits in the unsigned integer type `T`. See [`MatrixConstructError`]
+    /// for possible error variants resulting from violating these criteria. Note that
+    /// [`MatrixConstructError::RaggedTable`] is never returned from this constructor.
     ///
     /// # Arguments
     /// * `rows` - the number of rows the Matrix will have
@@ -118,15 +121,24 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
     pub fn from_storage(
         rows: usize,
         cols: usize,
-        storage: Vec<T>,
+        mut storage: Vec<T>,
     ) -> Result<Self, MatrixConstructError> {
-        if rows == 0 || cols == 0 {
+        if rows == 0 || cols == 0 || storage.len() == 0 {
             return Err(MatrixConstructError::EmptyTable());
         }
         let bits_per_t = T::n_bits();
         let n_bits = rows * cols;
         if n_bits.div_ceil(bits_per_t) != storage.len() {
             return Err(MatrixConstructError::InvalidStorage());
+        }
+
+        let n_bits_in_storage = bits_per_t * storage.len();
+        let n_extra_bits = n_bits_in_storage - n_bits;
+        if n_extra_bits > 0 {
+            let last_byte = storage.last_mut().unwrap();
+            let bit_mask = T::max_value() << n_extra_bits;
+
+            *last_byte = *last_byte & bit_mask;
         }
 
         Ok(Self {
@@ -204,7 +216,10 @@ mod tests {
 
         let mat_ragged = ToroidalBitMatrix::<u32>::new(ragged_table);
 
-        assert!(matches!(mat_ragged, Err(MatrixConstructError::RaggedTable())));
+        assert!(matches!(
+            mat_ragged,
+            Err(MatrixConstructError::RaggedTable())
+        ));
     }
 
     #[test]
@@ -217,5 +232,66 @@ mod tests {
 
         assert!(matches!(mat_1, Err(MatrixConstructError::EmptyTable())));
         assert!(matches!(mat_2, Err(MatrixConstructError::EmptyTable())));
+    }
+
+    #[test]
+    fn test_from_storage_ok() {
+        let storage = vec![
+            0b0000_0000_0000_0000_0000_0000_0000_0000u32,
+            0b0000_0000_0000_0000_0000_0000_0000_0000u32,
+            0b0000_0000_0000_0000_0000_0000_0000_0000u32,
+        ];
+
+        let mat_1 = ToroidalBitMatrix::<u32>::from_storage(3, 32, storage.clone()).unwrap();
+        let mat_2 = ToroidalBitMatrix::<u32>::from_storage(32, 3, storage.clone()).unwrap();
+        let mat_3 = ToroidalBitMatrix::<u32>::from_storage(31, 3, storage.clone()).unwrap();
+
+        assert_eq!(mat_1.get_rows(), 3);
+        assert_eq!(mat_1.get_cols(), 32);
+
+        assert_eq!(mat_2.get_rows(), 32);
+        assert_eq!(mat_2.get_cols(), 3);
+
+        assert_eq!(mat_3.get_rows(), 31);
+        assert_eq!(mat_3.get_cols(), 3);
+    }
+
+    #[test]
+    fn test_from_storage_empty() {
+        let storage = vec![
+            0b0000_0000_0000_0000_0000_0000_0000_0000u32,
+            0b0000_0000_0000_0000_0000_0000_0000_0000u32,
+            0b0000_0000_0000_0000_0000_0000_0000_0000u32,
+        ];
+
+        let empty_storage: std::vec::Vec<u32> = vec![];
+
+        let err_1 = ToroidalBitMatrix::<u32>::from_storage(0, 0, storage.clone());
+        let err_2 = ToroidalBitMatrix::<u32>::from_storage(1, 0, storage.clone());
+        let err_3 = ToroidalBitMatrix::<u32>::from_storage(0, 1, storage.clone());
+        let err_4 = ToroidalBitMatrix::<u32>::from_storage(1, 1, empty_storage.clone());
+
+        assert!(matches!(err_1, Err(MatrixConstructError::EmptyTable())));
+        assert!(matches!(err_2, Err(MatrixConstructError::EmptyTable())));
+        assert!(matches!(err_3, Err(MatrixConstructError::EmptyTable())));
+        assert!(matches!(err_4, Err(MatrixConstructError::EmptyTable())));
+    }
+
+    #[test]
+    fn test_from_storage_invalid() {
+        let storage = vec![
+            0b0000_0000_0000_0000_0000_0000_0000_0000u32,
+            0b0000_0000_0000_0000_0000_0000_0000_0000u32,
+            0b0000_0000_0000_0000_0000_0000_0000_0000u32,
+        ];
+
+        // because storage contains 32 + 32 + 32 = 96 bits in 32-bit chunks, any number of bits not
+        // in [65, 96] is invalid
+
+        let err_1 = ToroidalBitMatrix::<u32>::from_storage(64, 1, storage.clone());
+        let err_2 = ToroidalBitMatrix::<u32>::from_storage(97, 1, storage.clone());
+
+        assert!(matches!(err_1, Err(MatrixConstructError::InvalidStorage())));
+        assert!(matches!(err_2, Err(MatrixConstructError::InvalidStorage())));
     }
 }
