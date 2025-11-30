@@ -25,12 +25,12 @@ impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
             return Err(MatrixConstructError::EmptyTable());
         }
 
-        // if the table is ragged (every column is not the same size) then we reject the input and return an Err result
-        if table
-            .iter()
-            .map(|row| row.len() != cols)
-            .fold(false, |a, b| a | b)
-        {
+        if table.iter().any(|row| row.is_empty()) {
+            return Err(MatrixConstructError::EmptyTable());
+        }
+
+        let cols = table[0].len();
+        if table.iter().any(|row| row.len() != cols) {
             return Err(MatrixConstructError::RaggedTable());
         }
 
@@ -114,7 +114,7 @@ impl ToroidalBoolMatrix {
         cols: usize,
         storage: Vec<bool>,
     ) -> Result<Self, MatrixConstructError> {
-        if rows == 0 || cols == 0 {
+        if rows == 0 || cols == 0 || storage.len() == 0 {
             return Err(MatrixConstructError::EmptyTable());
         }
         if storage.len() != rows * cols {
@@ -125,5 +125,82 @@ impl ToroidalBoolMatrix {
             cols,
             storage,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::matrix::{MatrixConstructError, ToroidalBinaryMatrix, ToroidalBoolMatrix};
+    #[test]
+    fn test_new_ok() {
+        let table_1 = vec![vec![false, false, false], vec![false, false, true]];
+        let table_2 = vec![vec![false], vec![true], vec![true], vec![true]];
+
+        let mat_1 = ToroidalBoolMatrix::new(table_1).unwrap();
+        let mat_2 = ToroidalBoolMatrix::new(table_2).unwrap();
+
+        assert_eq!(mat_1.get_rows(), 2);
+        assert_eq!(mat_1.get_cols(), 3);
+
+        assert_eq!(mat_2.get_rows(), 4);
+        assert_eq!(mat_2.get_cols(), 1);
+    }
+
+    #[test]
+    fn test_new_empty() {
+        let empty_table_1: std::vec::Vec<std::vec::Vec<bool>> = vec![];
+        let empty_table_2: std::vec::Vec<std::vec::Vec<bool>> = vec![vec![], vec![]];
+
+        let mat_1 = ToroidalBoolMatrix::new(empty_table_1);
+        let mat_2 = ToroidalBoolMatrix::new(empty_table_2);
+
+        assert!(matches!(mat_1, Err(MatrixConstructError::EmptyTable())));
+        assert!(matches!(mat_2, Err(MatrixConstructError::EmptyTable())));
+    }
+
+    #[test]
+    fn test_new_ragged() {
+        let ragged_table = vec![vec![false], vec![false, true]];
+
+        let mat_ragged = ToroidalBoolMatrix::new(ragged_table);
+
+        assert!(matches!(
+            mat_ragged,
+            Err(MatrixConstructError::RaggedTable())
+        ));
+    }
+
+    #[test]
+    fn test_new_empty_ragged() {
+        let table_1 = vec![vec![false], vec![false, true], vec![]];
+        let table_2 = vec![vec![], vec![false, true], vec![false]];
+
+        let mat_1 = ToroidalBoolMatrix::new(table_1);
+        let mat_2 = ToroidalBoolMatrix::new(table_2);
+
+        assert!(matches!(mat_1, Err(MatrixConstructError::EmptyTable())));
+        assert!(matches!(mat_2, Err(MatrixConstructError::EmptyTable())));
+    }
+
+    #[test]
+    fn test_popcount() {
+        let table_1 = vec![
+            vec![false, false, true, true],
+            vec![false, false, true, false],
+        ];
+        let table_2 = vec![
+            vec![true],
+            vec![false],
+            vec![true],
+            vec![true],
+            vec![true],
+            vec![true],
+        ];
+
+        let mat_1 = ToroidalBoolMatrix::new(table_1).unwrap();
+        let mat_2 = ToroidalBoolMatrix::new(table_2).unwrap();
+
+        assert_eq!(mat_1.popcount(), 3);
+        assert_eq!(mat_2.popcount(), 5);
     }
 }

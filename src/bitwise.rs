@@ -56,3 +56,50 @@ impl<T: key::Key> BitWise for T {
         result
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::bitwise::BitWise;
+
+    #[test]
+    fn test_n_bits() {
+        assert_eq!(u8::n_bits(), u8::BITS as usize);
+        assert_eq!(u16::n_bits(), u16::BITS as usize);
+        assert_eq!(u32::n_bits(), u32::BITS as usize);
+        assert_eq!(u64::n_bits(), u64::BITS as usize);
+        assert_eq!(u128::n_bits(), u128::BITS as usize);
+    }
+
+    #[test]
+    fn test_get_bit() {
+        let bits = 0b01010101010101010101010101010101u32;
+        let not_bits = !bits;
+
+        for i in 0..u32::BITS {
+            let is_even = i % 2 == 0;
+            let idx = i as usize;
+            if is_even {
+                assert!(bits.get_bit(idx));
+                assert!(!not_bits.get_bit(idx));
+            } else {
+                assert!(!bits.get_bit(idx));
+                assert!(not_bits.get_bit(idx));
+            }
+        }
+    }
+
+    #[test]
+    fn test_set_bit() {
+        let mut bits = 0b00000000000000000000000000000000u32;
+
+        for i in 0..u32::BITS {
+            let idx = i as usize;
+            bits.set_bit(idx, true);
+
+            assert_eq!(bits, 1 << idx);
+
+            bits.set_bit(idx, false);
+            assert_eq!(bits, 0);
+        }
+    }
+}

@@ -1,4 +1,4 @@
-// 2025 Steven Chiacchiraenc
+// 2025 Steven Chiacchira
 use clap::Parser;
 use std::error::Error;
 use std::fmt;
