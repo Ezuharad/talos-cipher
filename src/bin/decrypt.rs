@@ -17,7 +17,7 @@ struct DecryptArgs {
     /// The encryption key to be used. If a numerical input is given, it will be used as the
     /// encryption key. If a string is given, it will be used to deterministically generate a key
     /// using SHA2567.
-    key: key::KeyArgument
+    key: key::KeyArgument,
 }
 
 #[derive(Debug)]

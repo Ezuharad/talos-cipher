@@ -128,8 +128,7 @@ pub fn decrypt_message_256(
 /// # Arguments
 /// * `message_matrix` - the matrix to scramble with $V$. Modified inplace
 /// * `key` - the key to use for unscrambling
-fn scramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T)
-{
+fn scramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T) {
     for row_block in 0..4 {
         // iterate over each row in the 'row block' and swap
         let block_offset: isize = 4 * row_block;
@@ -167,8 +166,7 @@ fn scramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T)
 /// # Arguments
 /// * `message_matrix` - the matrix to unscramble with $V^(-1)$. Modified inplace
 /// * `key` - the key to use for unscrambling
-fn unscramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T)
-{
+fn unscramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T) {
     for col_block in (0..4).rev() {
         // iterate over each col in the 'col block' and swap
         let block_offset: isize = 4 * col_block;
@@ -245,7 +243,7 @@ fn encrypt_block_256(
 /// * `encrypted_block` - the block to decrypt as a vector of bytes
 /// * `shift_automata` - the Automaton to use as the shift automaton
 /// * `transpose_automata` - the Automaton to use for the scrambling algorithm
-/// 
+///
 /// # Returns
 /// The decrypted ciphertext block as a vector of bytes.
 fn decrypt_block_256(
@@ -308,8 +306,7 @@ pub fn read_4_bits<T: ToroidalBinaryMatrix>(
     idx1: ToroidalMatrixIndex,
     idx2: ToroidalMatrixIndex,
     idx3: ToroidalMatrixIndex,
-) -> u8
-{
+) -> u8 {
     let mut result: u8 = 0;
     for (i, idx) in [idx0, idx1, idx2, idx3].iter().enumerate() {
         result += if matrix.at(idx) {
