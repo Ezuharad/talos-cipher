@@ -42,6 +42,8 @@ pub struct Automaton<T: ToroidalBinaryMatrix> {
     rule: AutomatonRule,
     /// The initial state of the Automaton.
     state: T,
+    /// A state used for iteration optimization.
+    state_copy: T,
 }
 
 impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
@@ -54,7 +56,11 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     /// # Returns
     /// The created Automaton instance.
     pub fn new(state: T, rule: AutomatonRule) -> Self {
-        Automaton { rule, state }
+        Automaton {
+            rule,
+            state: state.clone(),
+            state_copy: state,
+        }
     }
     /// Iterates the Automaton's rule `iterations` times.
     ///
@@ -63,7 +69,6 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     pub fn iter_rule(&mut self, iterations: u32) {
         let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
 
-        let mut copy = self.state.clone();
         for _ in 0..iterations {
             for row in 0..rows {
                 for col in 0..cols {
@@ -71,14 +76,16 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
                     let n_alive_neighbors = self.alive_neighbors(idx);
 
                     if self.state.at(&idx) {
-                        copy.set(&idx, !self.rule.dies[n_alive_neighbors as usize]);
+                        self.state_copy
+                            .set(&idx, !self.rule.dies[n_alive_neighbors as usize]);
                     } else {
-                        copy.set(&idx, self.rule.born[n_alive_neighbors as usize]);
+                        self.state_copy
+                            .set(&idx, self.rule.born[n_alive_neighbors as usize]);
                     }
                 }
             }
 
-            mem::swap(&mut copy, &mut self.state);
+            mem::swap(&mut self.state_copy, &mut self.state);
         }
     }
 
