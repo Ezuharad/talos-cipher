@@ -179,7 +179,10 @@ impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for Automaton<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{automata::{Automaton, AutomatonRule}, matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalBoolMatrix}};
+    use crate::{
+        automata::{Automaton, AutomatonRule},
+        matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalBoolMatrix},
+    };
 
     #[test]
     fn test_toroidal_matrix_eqivalence() {
@@ -194,7 +197,7 @@ mod tests {
 
         let rule = AutomatonRule {
             born: [false, false, true, true, true, true, true, false, false],
-            dies: [true, true, false, false, false, false, true, true, true]
+            dies: [true, true, false, false, false, false, true, true, true],
         };
 
         let mat_1 = ToroidalBitMatrix::<u8>::new(table_1.clone()).unwrap();

@@ -39,16 +39,13 @@ fn automata_black_box(c: &mut Criterion) {
     let mut automaton_u32 =
         Automaton::<ToroidalBitMatrix<u32>>::new(mat_u32, AUTOMATA_RULE.clone());
 
-    group.bench_function(
-        "Automaton<ToroidalBoolMatrix>.iter_rule(10_000)",
-        |b| b.iter(|| automaton_bool.iter_rule(N_ITERS)),
-    );
-    group.bench_function(
-        "Automaton<ToroidalBitMatrix<u8>>.iter_rule(10_000)",
-        |b| b.iter(|| automaton_u8.iter_rule(N_ITERS)),
-    );
-    group.bench_function(
-        "Automaton<ToroidalBitMatrix<u32>>.iter_rule(10_000)",
-        |b| b.iter(|| automaton_u32.iter_rule(N_ITERS)),
-    );
+    group.bench_function("Automaton<ToroidalBoolMatrix>.iter_rule(10_000)", |b| {
+        b.iter(|| automaton_bool.iter_rule(N_ITERS))
+    });
+    group.bench_function("Automaton<ToroidalBitMatrix<u8>>.iter_rule(10_000)", |b| {
+        b.iter(|| automaton_u8.iter_rule(N_ITERS))
+    });
+    group.bench_function("Automaton<ToroidalBitMatrix<u32>>.iter_rule(10_000)", |b| {
+        b.iter(|| automaton_u32.iter_rule(N_ITERS))
+    });
 }
