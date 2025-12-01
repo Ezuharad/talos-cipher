@@ -6,32 +6,38 @@ edition = "2021"
 [lib]
 name = "talos"
 path = "src/lib.rs"
+bench = false
+doctest = false
 
 [[bin]]
 name = "encrypt"
 path = "src/bin/encrypt.rs"
 test = false
+bench = false
 
 [[bin]]
 name = "decrypt"
 path = "src/bin/decrypt.rs"
 test = false
+bench = false
 
 [[bin]]
 name = "test_count"
 path = "src/bin/test_count.rs"
 test = false
+bench = false
 
 [[bin]]
 name = "test_shift"
 path = "src/bin/test_shift.rs"
 test = false
+bench = false
 
 [[bin]]
 name = "test_transpose"
 path = "src/bin/test_transpose.rs"
 test = false
-
+bench = false
 
 [dependencies]
 rand ="0.9.0"
@@ -40,3 +46,10 @@ itertools = "0.14.0"
 num-traits = "0.2.19"
 cargo-husky = "1.5.0"
 sha2 = "0.10.9"
+
+[dev-dependencies]
+criterion = "0.8.0"
+
+[[bench]]
+name = "automaton_iter"
+harness = false

@@ -177,6 +177,25 @@ pub trait ToroidalBinaryMatrix: Sized {
         let table = vec![vec![true; cols]; rows];
         Self::new(table)
     }
+    /// Returns the Matrix's internal state as a table of `bool`s.
+    ///
+    /// The first index of the table accesses rows of the matrix, while the second accesses
+    /// columns.
+    ///
+    /// # Returns
+    /// The Matrix's internal state as a table of `bool`s.
+    fn to_table(&self) -> Vec<Vec<bool>> {
+        let mut result = vec![vec![false; self.get_cols()]; self.get_rows()];
+
+        for (row_idx, row) in result.iter_mut().enumerate() {
+            for (col_idx, element) in row.iter_mut().enumerate() {
+                let idx = (row_idx as isize, col_idx as isize);
+                *element = self.at(&idx);
+            }
+        }
+
+        result
+    }
     /// Returns the number of rows the Matrix has.
     ///
     /// A Matrix will always have a positive (nonzero) number of rows.
