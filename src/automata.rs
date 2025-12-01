@@ -176,3 +176,41 @@ impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for Automaton<T> {
         write!(f, "{}", result)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{automata::{Automaton, AutomatonRule}, matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalBoolMatrix}};
+
+    #[test]
+    fn test_toroidal_matrix_eqivalence() {
+        let table_1 = vec![
+            vec![false, true, false, false, false, true],
+            vec![false, false, false, true, true, true],
+            vec![false, true, false, false, false, false],
+            vec![false, true, true, false, false, false],
+            vec![true, false, false, true, true, false],
+            vec![true, true, false, true, false, true],
+        ];
+
+        let rule = AutomatonRule {
+            born: [false, false, true, true, true, true, true, false, false],
+            dies: [true, true, false, false, false, false, true, true, true]
+        };
+
+        let mat_1 = ToroidalBitMatrix::<u8>::new(table_1.clone()).unwrap();
+        let mat_2 = ToroidalBitMatrix::<u32>::new(table_1.clone()).unwrap();
+        let mat_3 = ToroidalBoolMatrix::new(table_1.clone()).unwrap();
+
+        let mut automata_1 = Automaton::<ToroidalBitMatrix<u8>>::new(mat_1, rule.clone());
+        let mut automata_2 = Automaton::<ToroidalBitMatrix<u32>>::new(mat_2, rule.clone());
+        let mut automata_3 = Automaton::<ToroidalBoolMatrix>::new(mat_3, rule.clone());
+
+        automata_1.iter_rule(32);
+        automata_2.iter_rule(32);
+        automata_3.iter_rule(32);
+
+        assert_eq!(automata_1.state.to_table(), automata_2.state.to_table());
+        assert_eq!(automata_1.state.to_table(), automata_3.state.to_table());
+        assert_eq!(automata_2.state.to_table(), automata_3.state.to_table());
+    }
+}
