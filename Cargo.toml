@@ -40,3 +40,6 @@ itertools = "0.14.0"
 num-traits = "0.2.19"
 cargo-husky = "1.5.0"
 sha2 = "0.10.9"
+
+[dev-dependencies]
+criterion = "0.8.0"
