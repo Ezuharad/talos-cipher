@@ -62,6 +62,7 @@ pub const BASE_32_DIGITS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 /// # Examples
 /// The number 1, represented as `00000000000000000000000000000001` with 32 digits, would create a
 /// `HashMap` containing `false` for all characters except `A`, or 0 in base 32.
+#[must_use]
 pub fn gen_char_map(seed: u32) -> HashMap<char, bool> {
     zip(
         BASE_32_DIGITS.chars(),
@@ -142,6 +143,7 @@ pub fn parse_bool_table(
 /// ```
 /// A is at Toroidal indices [(0, 0), (0, 2), (0, 4), (1, 2), (1, 4)]. Thus, the resulting vector
 /// at index 0 ('A' in base-32) is the vector [(0, 0), (0, 2), (0, 4), (1, 2), (1, 4)].
+#[must_use]
 pub fn get_temporal_seed_map(string: &str) -> Vec<Vec<ToroidalMatrixIndex>> {
     let mut result = Vec::new();
     for character in BASE_32_DIGITS.chars() {
@@ -167,6 +169,7 @@ pub fn get_temporal_seed_map(string: &str) -> Vec<Vec<ToroidalMatrixIndex>> {
 /// ##A.A
 /// ```
 /// A is at indices [(0, 0), (0, 2), (0, 4), (1, 2), (1, 4)].
+#[must_use]
 fn get_char_indices(string: &str, character: char) -> Vec<ToroidalMatrixIndex> {
     let mut result = Vec::new();
     for (row, line) in string.lines().enumerate() {

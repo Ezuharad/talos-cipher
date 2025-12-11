@@ -10,6 +10,7 @@ use talos::matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalBoolMatrix}
 criterion_group!(benches, automata_black_box);
 criterion_main!(benches);
 
+#[must_use]
 fn generate_bool_table(rows: usize, cols: usize) -> Vec<Vec<bool>> {
     let mut result = vec![vec![false; cols]; rows];
 

@@ -47,6 +47,7 @@ pub type TalosAutomaton = Automaton<TalosMatrix>;
 ///
 /// # Returns
 /// A tuple containing the initialized transpose and shift automata.
+#[must_use]
 pub fn get_transpose_shift_automata(seed: u32) -> (TalosAutomaton, TalosAutomaton) {
     let mut char_map = parse::gen_char_map(seed);
     char_map.insert('#', true);
@@ -84,6 +85,7 @@ pub fn get_transpose_shift_automata(seed: u32) -> (TalosAutomaton, TalosAutomato
 ///
 /// # Returns
 /// The encrypted message as a vector of bytes.
+#[must_use]
 pub fn encrypt_message_256(
     message: Vec<u8>,
     shift_automata: &mut TalosAutomaton,
@@ -111,6 +113,7 @@ pub fn encrypt_message_256(
 ///
 /// # Returns
 /// The decrypted message as a vector of bytes.
+#[must_use]
 pub fn decrypt_message_256(
     ciphertext: Vec<u8>,
     shift_automata: &mut TalosAutomaton,
@@ -210,6 +213,7 @@ fn unscramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &
 ///
 /// # Returns
 /// `message` split into blocks containing 256 bits (32 u8s).
+#[must_use]
 fn block_split_256_message(message: Vec<u8>) -> Vec<Vec<u8>> {
     let u8s_per_block = BLOCK_SIZE / u8::BITS as usize;
     let mut blocks: Vec<Vec<u8>> = message.chunks(u8s_per_block).map(|c| c.to_vec()).collect();
@@ -222,6 +226,7 @@ fn block_split_256_message(message: Vec<u8>) -> Vec<Vec<u8>> {
 }
 
 /// Encrypts a 256 bit message block with the Talos algorithm.
+#[must_use]
 fn encrypt_block_256(
     message_block: Vec<u8>,
     shift_automata: &mut TalosAutomaton,
@@ -246,6 +251,7 @@ fn encrypt_block_256(
 ///
 /// # Returns
 /// The decrypted ciphertext block as a vector of bytes.
+#[must_use]
 fn decrypt_block_256(
     encrypted_block: Vec<u8>,
     shift_automata: &mut TalosAutomaton,
@@ -287,6 +293,9 @@ pub fn temporal_seed_automaton(
 /// Reads 4 bit values at `idx0`, `idx`, `idx2`, `idx3`, in `matrix`, then concatenates them into a
 /// `u8`.
 ///
+/// See section 2.2.3 for details on the matrix scrambling algorithm $V$ as well as the matrix
+///   unscrambling algorithm $V^{-1}$ where this is used.
+///
 /// # Arguments
 /// * `matrx` - the matrix to read from.
 /// * `idx0` - the first index to read a bit value from.
@@ -300,6 +309,7 @@ pub fn temporal_seed_automaton(
 /// # Examples
 /// Given that the values [0, 1, 1, 0] are read for `idx0`, `idx1`, `idx2`, `idx3` respectively,
 /// returns the value `6`, or `01100000` in binary.
+#[must_use]
 pub fn read_4_bits<T: ToroidalBinaryMatrix>(
     matrix: &T,
     idx0: ToroidalMatrixIndex,

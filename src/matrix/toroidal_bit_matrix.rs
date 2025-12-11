@@ -91,6 +91,7 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
     ///
     /// # Returns
     /// The storage backing the Matrix.
+    #[must_use]
     pub fn get_storage(&self) -> &Vec<T> {
         &self.storage
     }
@@ -168,6 +169,7 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
     /// * $(2, 3) \rightarrow (1, 1)$
     /// * $(6, 7) \rightarrow (9, 7)$
     /// * $(0, 11) \rightarrow (1, 3)$
+    #[must_use]
     fn get_element_bit_index_from_canon_index(&self, index: (usize, usize)) -> (usize, usize) {
         let (bit_row, bit_col) = index;
         let flat_bit_idx = self.get_cols() * bit_row + bit_col;

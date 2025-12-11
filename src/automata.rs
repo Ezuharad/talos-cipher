@@ -55,6 +55,7 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     ///
     /// # Returns
     /// The created Automaton instance.
+    #[must_use]
     pub fn new(state: T, rule: AutomatonRule) -> Self {
         Automaton {
             rule,
@@ -93,6 +94,7 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     ///
     /// # Returns
     /// The Automaton's internal state
+    #[must_use]
     pub fn get_state(&self) -> &T {
         &self.state
     }
@@ -126,6 +128,7 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     ///
     /// # Returns
     /// The number of living Moore neighbors of the cell at idx.
+    #[must_use]
     pub fn alive_neighbors(&self, idx: ToroidalMatrixIndex) -> u32 {
         let (row, col) = (idx.0, idx.1);
         let mut sum_neighbors = 0;
