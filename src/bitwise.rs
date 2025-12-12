@@ -3,8 +3,12 @@ use crate::key;
 
 /// Trait implementing bitwise operations
 pub trait BitWise {
+    /// The number of bytes in the implementing type
+    fn n_bytes() -> u32 {
+        Self::n_bits() / u8::BITS
+    }
     /// The number of bits in the implementing type.
-    fn n_bits() -> usize;
+    fn n_bits() -> u32;
     /// Returns `true` if the bit at `bit_index` is set, and `false` otherwise.
     ///
     /// <div class="warning">
@@ -42,16 +46,16 @@ pub trait BitWise {
 }
 
 impl<T: key::Key> BitWise for T {
-    fn n_bits() -> usize {
-        T::zero().count_zeros() as usize
+    fn n_bits() -> u32 {
+        T::zero().count_zeros()
     }
     fn get_bit(&self, bit_index: usize) -> bool {
-        debug_assert!(bit_index < T::n_bits());
+        debug_assert!((bit_index as u32) < T::n_bits());
         let bit_mask = T::one() << bit_index;
         (*self & bit_mask) != T::zero()
     }
     fn set_bit(&mut self, bit_index: usize, new_val: bool) -> bool {
-        debug_assert!(bit_index < T::n_bits());
+        debug_assert!((bit_index as u32) < T::n_bits());
         let result = self.get_bit(bit_index);
         let bit_mask = T::one() << bit_index;
         if new_val {
@@ -69,11 +73,11 @@ mod tests {
 
     #[test]
     fn test_n_bits() {
-        assert_eq!(u8::n_bits(), u8::BITS as usize);
-        assert_eq!(u16::n_bits(), u16::BITS as usize);
-        assert_eq!(u32::n_bits(), u32::BITS as usize);
-        assert_eq!(u64::n_bits(), u64::BITS as usize);
-        assert_eq!(u128::n_bits(), u128::BITS as usize);
+        assert_eq!(u8::n_bits(), u8::BITS);
+        assert_eq!(u16::n_bits(), u16::BITS);
+        assert_eq!(u32::n_bits(), u32::BITS);
+        assert_eq!(u64::n_bits(), u64::BITS);
+        assert_eq!(u128::n_bits(), u128::BITS);
     }
 
     #[test]
