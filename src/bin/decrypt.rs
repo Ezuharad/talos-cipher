@@ -51,7 +51,7 @@ fn main() -> Result<(), DecryptError> {
     char_map.insert('#', true);
     char_map.insert('.', false);
 
-    let (mut s_automaton, mut t_automaton) = encrypt::get_transpose_shift_automata(seed);
+    let (mut s_automaton, mut t_automaton) = encrypt::get_shift_transpose_automata(seed);
 
     let input_buffer = match fs::read(args.input) {
         Ok(buffer) => buffer,
