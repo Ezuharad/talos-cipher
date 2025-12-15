@@ -35,8 +35,10 @@ fn automata_black_box(c: &mut Criterion) {
     let mat_u8 = black_box(ToroidalBitMatrix::<u8>::new(table.clone()).unwrap());
     let mat_u32 = black_box(ToroidalBitMatrix::<u32>::new(table.clone()).unwrap());
 
-    let mut automaton_bool = ToroidalAutomaton::<ToroidalBoolMatrix>::new(mat_bool, AUTOMATA_RULE.clone());
-    let mut automaton_u8 = ToroidalAutomaton::<ToroidalBitMatrix<u8>>::new(mat_u8, AUTOMATA_RULE.clone());
+    let mut automaton_bool =
+        ToroidalAutomaton::<ToroidalBoolMatrix>::new(mat_bool, AUTOMATA_RULE.clone());
+    let mut automaton_u8 =
+        ToroidalAutomaton::<ToroidalBitMatrix<u8>>::new(mat_u8, AUTOMATA_RULE.clone());
     let mut automaton_u32 =
         ToroidalAutomaton::<ToroidalBitMatrix<u32>>::new(mat_u32, AUTOMATA_RULE.clone());
 

@@ -183,7 +183,7 @@ impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for ToroidalAutomaton<T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        automata::{ToroidalAutomaton, AutomatonRule},
+        automata::{AutomatonRule, ToroidalAutomaton},
         matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalBoolMatrix},
     };
 
