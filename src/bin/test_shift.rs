@@ -18,11 +18,11 @@ struct Args {
     #[arg(short, long, default_value_t = 1)]
     seeds: u32,
 
-    /// The number of generations to run the [Automaton](automata::Automaton) for.
+    /// The number of generations to run the [ToroidalAutomaton](automata::ToroidalAutomaton) for.
     #[arg(short, long, default_value_t = 32_000)]
     generations: u32,
 
-    /// File to use for initializing the [Automaton](automata::Automaton) state.
+    /// File to use for initializing the [ToroidalAutomaton](automata::ToroidalAutomaton) state.
     #[arg(short, long)]
     init_file: String,
 
@@ -65,7 +65,7 @@ fn main() {
             dies: [true, true, false, false, false, true, true, true, true],
         };
 
-        let mut automaton = automata::Automaton::new(state, rule);
+        let mut automaton = automata::ToroidalAutomaton::new(state, rule);
         if !args.no_temporal_seed {
             encrypt::temporal_seed_automaton(&mut automaton, seed, &temporal_seed_map);
         }

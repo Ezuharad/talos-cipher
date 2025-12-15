@@ -1,5 +1,5 @@
 // 2025 Steven Chiacchira
-use crate::automata::{Automaton, AutomatonRule};
+use crate::automata::{ToroidalAutomaton, AutomatonRule};
 use crate::matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalMatrixIndex};
 use crate::parse;
 
@@ -20,7 +20,7 @@ pub const S_INIT_MATRIX: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/data/init_matrix/S_init_matrix.txt"
 ));
-/// Automata rule used in the Talos encryption protocol. See RFC-0 section 2.2.2 for details.
+/// Automaton rule used in the Talos encryption protocol. See RFC-0 section 2.2.2 for details.
 pub const AUTOMATA_RULE: AutomatonRule = AutomatonRule {
     born: [false, false, true, true, true, true, true, false, false],
     dies: [true, true, false, false, false, true, true, true, true],
@@ -32,7 +32,7 @@ const N_ITERS_PER_BLOCK: u32 = 11;
 /// A ToroidalBitMatrix backed by a `Vec<u8>`. Allows for quick reading of character values.
 pub type TalosMatrix = ToroidalBitMatrix<u8>;
 /// A cellular automaton using a ToroidalBitMatrix backed by a `Vec<u8>`.
-pub type TalosAutomaton = Automaton<TalosMatrix>;
+pub type TalosAutomaton = ToroidalAutomaton<TalosMatrix>;
 
 /// Prepares and returns the transpose and shift automata proposed in RFC-0 section 2.
 ///
@@ -59,8 +59,8 @@ pub fn get_transpose_shift_automata(seed: u32) -> (TalosAutomaton, TalosAutomato
     let s_state = TalosMatrix::new(s_table).unwrap();
     let t_state = TalosMatrix::new(t_table).unwrap();
 
-    let mut s_automaton = Automaton::new(s_state, AUTOMATA_RULE);
-    let mut t_automaton = Automaton::new(t_state, AUTOMATA_RULE);
+    let mut s_automaton = ToroidalAutomaton::new(s_state, AUTOMATA_RULE);
+    let mut t_automaton = ToroidalAutomaton::new(t_state, AUTOMATA_RULE);
 
     let s_temporal_seed_map = parse::get_temporal_seed_map(S_INIT_MATRIX);
     let t_temporal_seed_map = parse::get_temporal_seed_map(T_INIT_MATRIX);
@@ -270,7 +270,7 @@ fn decrypt_block_256(
 /// Performs temporal seeding as described in RFC-1 section 2.1.
 ///
 /// # Arguments
-/// * `automaton` - the Automaton to be seeded.
+/// * `automaton` - the `ToroidalAutomaton` to be seeded.
 /// * `key` - the key to use for temporal seeding.
 /// * `seed_positions` - a vector containing the ToroidalMatrixIndices to seed each key bit at.
 ///   `seed_positions[i]` contains the ToroidalMatrixIndices in `automaton` which will be set to

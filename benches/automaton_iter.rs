@@ -3,7 +3,7 @@ use std::hint::black_box;
 use std::time::Duration;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use talos::automata::Automaton;
+use talos::automata::ToroidalAutomaton;
 use talos::encrypt::{AUTOMATA_RULE, N_COLS, N_ROWS};
 use talos::matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalBoolMatrix};
 
@@ -35,10 +35,10 @@ fn automata_black_box(c: &mut Criterion) {
     let mat_u8 = black_box(ToroidalBitMatrix::<u8>::new(table.clone()).unwrap());
     let mat_u32 = black_box(ToroidalBitMatrix::<u32>::new(table.clone()).unwrap());
 
-    let mut automaton_bool = Automaton::<ToroidalBoolMatrix>::new(mat_bool, AUTOMATA_RULE.clone());
-    let mut automaton_u8 = Automaton::<ToroidalBitMatrix<u8>>::new(mat_u8, AUTOMATA_RULE.clone());
+    let mut automaton_bool = ToroidalAutomaton::<ToroidalBoolMatrix>::new(mat_bool, AUTOMATA_RULE.clone());
+    let mut automaton_u8 = ToroidalAutomaton::<ToroidalBitMatrix<u8>>::new(mat_u8, AUTOMATA_RULE.clone());
     let mut automaton_u32 =
-        Automaton::<ToroidalBitMatrix<u32>>::new(mat_u32, AUTOMATA_RULE.clone());
+        ToroidalAutomaton::<ToroidalBitMatrix<u32>>::new(mat_u32, AUTOMATA_RULE.clone());
 
     group.bench_function("Automaton<ToroidalBoolMatrix>.iter_rule(10_000)", |b| {
         b.iter(|| automaton_bool.iter_rule(N_ITERS))
