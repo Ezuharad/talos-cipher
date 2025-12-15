@@ -54,7 +54,7 @@ fn main() -> Result<(), EncryptError> {
         }
     };
 
-    let (mut s_automaton, mut t_automaton) = encrypt::get_transpose_shift_automata(seed);
+    let (mut s_automaton, mut t_automaton) = encrypt::get_shift_transpose_automata(seed);
 
     eprintln!("Using key {}", seed);
     let now = std::time::Instant::now();

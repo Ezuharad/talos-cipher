@@ -9,15 +9,15 @@ fn test_encrypt_decrypt_equal() {
         fs::read(message_file).expect("Could not find plaintext in data/tests directory.");
     let message_size = message.len();
 
-    for i in 0..32 {
-        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+    for key in 0..32 {
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_shift_transpose_automata(key);
         let ciphertext = talos::encrypt::encrypt_message_256(
             message.clone(),
             &mut s_automaton,
             &mut t_automaton,
         );
 
-        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_shift_transpose_automata(key);
         let decrypted =
             talos::encrypt::decrypt_message_256(ciphertext, &mut s_automaton, &mut t_automaton);
 
@@ -34,13 +34,13 @@ fn test_decrypt_breaking() {
         fs::read(message_file).expect("Could not find plaintext in data/tests directory.");
     let message_size = message.len();
 
-    for i in 0..3 {
+    for key in 0..3 {
         let encrypted_file =
-            env!("CARGO_MANIFEST_DIR").to_owned() + &format!("/data/tests/text_01_k{}.enc", i);
+            env!("CARGO_MANIFEST_DIR").to_owned() + &format!("/data/tests/text_01_k{}.enc", key);
         let ciphertext =
             fs::read(encrypted_file).expect("Could not find ciphertext in data/tests directory.");
 
-        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_shift_transpose_automata(key);
         let decrypted =
             talos::encrypt::decrypt_message_256(ciphertext, &mut s_automaton, &mut t_automaton);
 
@@ -55,8 +55,8 @@ fn test_encrypt_breaking() {
     let message =
         fs::read(message_file).expect("Could not find plaintext in data/tests directory.");
 
-    for i in 0..3 {
-        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+    for key in 0..3 {
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_shift_transpose_automata(key);
         let encrypted_message = talos::encrypt::encrypt_message_256(
             message.clone(),
             &mut s_automaton,
@@ -64,7 +64,7 @@ fn test_encrypt_breaking() {
         );
 
         let encrypted_file =
-            env!("CARGO_MANIFEST_DIR").to_owned() + &format!("/data/tests/text_01_k{}.enc", i);
+            env!("CARGO_MANIFEST_DIR").to_owned() + &format!("/data/tests/text_01_k{}.enc", key);
         let ciphertext =
             fs::read(encrypted_file).expect("Could not find ciphertext in data/tests directory.");
 
@@ -81,8 +81,8 @@ fn test_encrypt_is_unique() {
 
     let mut set: std::collections::HashSet<std::vec::Vec<u8>> = std::collections::HashSet::new();
 
-    for i in 0..32 {
-        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+    for key in 0..32 {
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_shift_transpose_automata(key);
         let encrypted_message = talos::encrypt::encrypt_message_256(
             message.clone(),
             &mut s_automaton,
@@ -108,8 +108,8 @@ fn test_decrypt_is_unique() {
 
     let mut set: std::collections::HashSet<std::vec::Vec<u8>> = std::collections::HashSet::new();
 
-    for i in 1..32 {
-        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_transpose_shift_automata(i);
+    for key in 1..32 {
+        let (mut s_automaton, mut t_automaton) = talos::encrypt::get_shift_transpose_automata(key);
         let plaintext = talos::encrypt::decrypt_message_256(
             ciphertext.clone(),
             &mut s_automaton,

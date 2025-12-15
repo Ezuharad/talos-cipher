@@ -48,7 +48,7 @@ pub type TalosAutomaton = ToroidalAutomaton<TalosMatrix>;
 /// # Returns
 /// A tuple containing the initialized transpose and shift automata.
 #[must_use]
-pub fn get_transpose_shift_automata(seed: u32) -> (TalosAutomaton, TalosAutomaton) {
+pub fn get_shift_transpose_automata(seed: u32) -> (TalosAutomaton, TalosAutomaton) {
     let mut char_map = parse::gen_char_map(seed);
     char_map.insert('#', true);
     char_map.insert('.', false);
@@ -236,8 +236,8 @@ fn encrypt_block_256(
     shift_automata.iter_rule(N_ITERS_PER_BLOCK);
     transpose_automata.iter_rule(N_ITERS_PER_BLOCK);
 
-    scramble_matrix_256(&mut message_matrix, shift_automata.get_state());
-    let _ = message_matrix.bitwise_xor(transpose_automata.get_state());
+    scramble_matrix_256(&mut message_matrix, transpose_automata.get_state());
+    let _ = message_matrix.bitwise_xor(shift_automata.get_state());
 
     message_matrix.get_storage().to_vec()
 }
@@ -261,8 +261,8 @@ fn decrypt_block_256(
     shift_automata.iter_rule(N_ITERS_PER_BLOCK);
     transpose_automata.iter_rule(N_ITERS_PER_BLOCK);
 
-    let _ = message_matrix.bitwise_xor(transpose_automata.get_state());
-    unscramble_matrix_256(&mut message_matrix, shift_automata.get_state());
+    let _ = message_matrix.bitwise_xor(shift_automata.get_state());
+    unscramble_matrix_256(&mut message_matrix, transpose_automata.get_state());
 
     message_matrix.get_storage().to_vec()
 }
