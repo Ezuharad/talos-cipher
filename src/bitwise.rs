@@ -2,7 +2,6 @@
 use crate::key;
 
 /// Represents a single bit.
-#[repr(transparent)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Bit(bool);
 
