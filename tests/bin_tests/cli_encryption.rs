@@ -33,9 +33,7 @@ fn random_key() {
     let output_file_dir = TempDir::new().unwrap();
     let output_file = output_file_dir.child("_.enc");
 
-    command
-        .arg(message_file)
-        .arg(output_file.path());
+    command.arg(message_file).arg(output_file.path());
 
     command
         .assert()

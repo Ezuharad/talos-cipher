@@ -35,10 +35,9 @@ fn no_key_provided() {
 
     command.arg(message_file).arg(output_file.path());
 
-    command
-        .assert()
-        .failure()
-        .stderr(predicates::str::contains("the following required arguments were not provided"));
+    command.assert().failure().stderr(predicates::str::contains(
+        "the following required arguments were not provided",
+    ));
 }
 
 #[test]
