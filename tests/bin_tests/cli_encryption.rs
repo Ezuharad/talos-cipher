@@ -1,5 +1,4 @@
 // 2025 Steven Chiacchira
-use crate::bin_tests::file_utils::file_contents_equal;
 use assert_cmd::cargo;
 use assert_fs::{fixture::PathChild, TempDir};
 use std::fs;
@@ -14,7 +13,11 @@ fn no_such_file() {
     let output_file_dir = TempDir::new().unwrap();
     let output_file = output_file_dir.child("_.enc");
 
-    command.arg("_.txt").arg(output_file.path());
+    command
+        .arg("--key")
+        .arg("42")
+        .arg("_.txt")
+        .arg(output_file.path());
 
     command
         .assert()
@@ -23,8 +26,27 @@ fn no_such_file() {
 }
 
 #[test]
+fn random_key() {
+    let mut command = cargo::cargo_bin_cmd!("encrypt");
+
+    let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
+    let output_file_dir = TempDir::new().unwrap();
+    let output_file = output_file_dir.child("_.enc");
+
+    command
+        .arg(message_file)
+        .arg(output_file.path());
+
+    command
+        .assert()
+        .success()
+        .stderr(predicates::str::contains("Using key"));
+}
+
+#[test]
 fn numeric_keys() {
     let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
+    let message_file = path::Path::new(&message_file);
 
     for key in 0..3 {
         let output_file_dir = TempDir::new().unwrap();
@@ -41,13 +63,14 @@ fn numeric_keys() {
             .success()
             .stderr(predicates::str::contains("Finished"));
 
+        let ciphertext = fs::read(output_file).unwrap();
+
         let expected_file =
             env!("CARGO_MANIFEST_DIR").to_owned() + &format!("/data/tests/text_01_k{}.enc", key);
-        let expected_file = path::Path::new(&expected_file);
+        let expected_ciphertext = fs::read(expected_file).unwrap();
 
-        let is_equal =
-            file_contents_equal(&output_file, expected_file).expect("Missing expected file");
-        assert!(is_equal);
+        assert!(expected_ciphertext == ciphertext);
+
         output_file_dir.close().unwrap();
     }
 }
@@ -55,6 +78,7 @@ fn numeric_keys() {
 #[test]
 fn str_keys() {
     let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
+    let message_file = path::Path::new(&message_file);
 
     for key in ["Foo", "Bar"] {
         let output_file_dir = TempDir::new().unwrap();
@@ -71,13 +95,14 @@ fn str_keys() {
             .success()
             .stderr(predicates::str::contains("Finished"));
 
+        let ciphertext = fs::read(output_file).unwrap();
+
         let expected_file =
             env!("CARGO_MANIFEST_DIR").to_owned() + &format!("/data/tests/text_01_k{}.enc", key);
-        let expected_file = path::Path::new(&expected_file);
+        let expected_ciphertext = fs::read(expected_file).unwrap();
 
-        let is_equal =
-            file_contents_equal(&output_file, expected_file).expect("Missing expected file");
-        assert!(is_equal);
+        assert!(expected_ciphertext == ciphertext);
+
         output_file_dir.close().unwrap();
     }
 }
