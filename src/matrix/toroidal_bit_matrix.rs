@@ -1,5 +1,5 @@
 // 2025 Steven Chiacchira
-use crate::bitwise::BitWise;
+use crate::bitwise::{Bit, BitWise};
 use crate::key;
 use crate::matrix::{
     MatrixConstructError, MatrixOpError, ToroidalBinaryMatrix, ToroidalMatrixIndex,
@@ -62,14 +62,14 @@ impl<T: key::Key> ToroidalBinaryMatrix for ToroidalBitMatrix<T> {
         let (element_idx, bit_idx) = self.get_element_bit_index_from_canon_index((row, col));
         let element = self.storage[element_idx];
 
-        element.get_bit(bit_idx)
+        element.get_bit(bit_idx).is_set()
     }
     fn set(&mut self, idx: &ToroidalMatrixIndex, new_val: bool) -> bool {
         let (row, col) = self.canonize_index(*idx);
         let (element_idx, bit_idx) = self.get_element_bit_index_from_canon_index((row, col));
         let element = &mut self.storage[element_idx];
 
-        element.set_bit(bit_idx, new_val)
+        element.set_bit(bit_idx, Bit::new(new_val)).is_set()
     }
     fn bitwise_xor(&mut self, other: &Self) -> Result<(), MatrixOpError> {
         if self.get_cols() != other.get_cols() || self.get_rows() != other.get_rows() {
