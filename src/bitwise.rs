@@ -12,18 +12,6 @@ impl Bit {
     /// One-valued bit.
     pub const ONE: Self = Bit(true);
 
-    /// Constructs a new bit.
-    ///
-    /// # Arguments
-    /// * `is_set` - `true` if the bit should be set, and false otherwise.
-    ///
-    /// # Returns
-    /// A new bit which is set if `is_set` is `true`.
-    #[must_use]
-    pub fn new(is_set: bool) -> Self {
-        Self(is_set)
-    }
-
     /// Returns `true` if the bit is set, and `false` otherwise.
     ///
     /// # Returns
@@ -31,6 +19,12 @@ impl Bit {
     #[must_use]
     pub fn is_set(&self) -> bool {
         self.0
+    }
+}
+
+impl From<bool> for Bit {
+    fn from(is_set: bool) -> Self {
+        Self(is_set)
     }
 }
 
