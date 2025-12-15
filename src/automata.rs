@@ -3,15 +3,15 @@ use crate::matrix::{ToroidalBinaryMatrix, ToroidalMatrixIndex};
 use std::fmt;
 use std::mem;
 
-/// The character used to represent an [`Automaton`]'s `true` state in files and `String`
+/// The character used to represent a [`ToroidalAutomaton`]'s `true` state in files and `String`
 /// representations.
 const TRUE_CHAR: char = '#';
-/// The character used to represent an [`Automaton`]'s `false` state in files and String
+/// The character used to represent a [`ToroidalAutomaton`]'s `false` state in files and String
 /// representations.
 const FALSE_CHAR: char = '.';
 
 #[derive(Clone, Debug)]
-/// Defines how an [`Automaton`] will change from one state to the next.
+/// Defines how a [`ToroidalAutomaton`] will change from one state to the next.
 ///
 /// This struct is limited to symmetrical cellular automaton rules defined over a (Moore Neighborhood)[<https://en.wikipedia.org/wiki/Moore_neighborhood>].
 /// Roughly speaking, a cellular automaton rule is symmetric if it only considers the *number* of
@@ -37,35 +37,36 @@ pub struct AutomatonRule {
 /// Defines a 2D, binary cellular automaton on a torus.
 ///
 /// Uses a type `T` implementing `ToroidalBinaryMatrix` to store its state.
-pub struct Automaton<T: ToroidalBinaryMatrix> {
-    /// The automaton rule the Automaton will follow.
+pub struct ToroidalAutomaton<T: ToroidalBinaryMatrix> {
+    /// The automaton rule the `ToroidalAutomaton` will follow.
     rule: AutomatonRule,
-    /// The initial state of the Automaton.
+    /// The initial state of the `ToroidalAutomaton`.
     state: T,
     /// A state used for iteration optimization.
     state_copy: T,
 }
 
-impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
-    /// Creates a new Automaton instance.
+impl<T: ToroidalBinaryMatrix + Clone> ToroidalAutomaton<T> {
+    /// Creates a new `ToroidalAutomaton` instance.
     ///
     /// # Arguments
-    /// * `state` - the initial state of the Automaton. Implicitly defines the size of the automaton
-    /// * `rule` - the rule the Automaton will use to generate its next state
+    /// * `state` - the initial state of the `ToroidalAutomaton`. Implicitly defines the size of the automaton
+    /// * `rule` - the rule the `ToroidalAutomaton` will use to generate its next state
     ///
     /// # Returns
-    /// The created Automaton instance.
+    /// The created `ToroidalAutomaton` instance.
+    #[must_use]
     pub fn new(state: T, rule: AutomatonRule) -> Self {
-        Automaton {
+        ToroidalAutomaton {
             rule,
             state: state.clone(),
             state_copy: state,
         }
     }
-    /// Iterates the Automaton's rule `iterations` times.
+    /// Iterates the `ToroidalAutomaton`'s rule `iterations` times.
     ///
     /// # Arguments
-    /// * `iterations` - the number of times to apply the Automaton's rule
+    /// * `iterations` - the number of times to apply the `ToroidalAutomaton`'s rule
     pub fn iter_rule(&mut self, iterations: u32) {
         let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
 
@@ -89,15 +90,16 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
         }
     }
 
-    /// Returns a reference to the Automaton state.
+    /// Returns a reference to the `ToroidalAutomaton` state.
     ///
     /// # Returns
-    /// The Automaton's internal state
+    /// The `ToroidalAutomaton`'s internal state
+    #[must_use]
     pub fn get_state(&self) -> &T {
         &self.state
     }
 
-    /// Sets the state of one of the Automaton's cells.
+    /// Sets the state of one of the `ToroidalAutomaton`'s cells.
     ///
     /// # Arguments
     /// * `idx` - the cell to be mutated
@@ -117,7 +119,7 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     /// cell at `idx` is not generally included in the count, the result will range in [0, 8].
     ///
     /// <div class="warning">
-    /// The cell at `idx` will be included in the count if the width or height of the Automaton is 1.
+    /// The cell at `idx` will be included in the count if the width or height of the `ToroidalAutomaton` is 1.
     /// In this case, the result will still range in [0, 8].
     /// </div>
     ///
@@ -126,6 +128,7 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     ///
     /// # Returns
     /// The number of living Moore neighbors of the cell at idx.
+    #[must_use]
     pub fn alive_neighbors(&self, idx: ToroidalMatrixIndex) -> u32 {
         let (row, col) = (idx.0, idx.1);
         let mut sum_neighbors = 0;
@@ -142,10 +145,10 @@ impl<T: ToroidalBinaryMatrix + Clone> Automaton<T> {
     }
 }
 
-impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for Automaton<T> {
-    /// Represents the state of the [`Automaton`] as a rectangular array of characters.
+impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for ToroidalAutomaton<T> {
+    /// Represents the state of the [`ToroidalAutomaton`] as a rectangular array of characters.
     /// # Example
-    /// an Automaton with the state
+    /// a `ToroidalAutomaton` with the state
     /// ```txt
     /// TFFT
     /// TFTT
@@ -180,7 +183,7 @@ impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for Automaton<T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        automata::{Automaton, AutomatonRule},
+        automata::{ToroidalAutomaton, AutomatonRule},
         matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalBoolMatrix},
     };
 
@@ -204,9 +207,9 @@ mod tests {
         let mat_2 = ToroidalBitMatrix::<u32>::new(table_1.clone()).unwrap();
         let mat_3 = ToroidalBoolMatrix::new(table_1.clone()).unwrap();
 
-        let mut automata_1 = Automaton::<ToroidalBitMatrix<u8>>::new(mat_1, rule.clone());
-        let mut automata_2 = Automaton::<ToroidalBitMatrix<u32>>::new(mat_2, rule.clone());
-        let mut automata_3 = Automaton::<ToroidalBoolMatrix>::new(mat_3, rule.clone());
+        let mut automata_1 = ToroidalAutomaton::<ToroidalBitMatrix<u8>>::new(mat_1, rule.clone());
+        let mut automata_2 = ToroidalAutomaton::<ToroidalBitMatrix<u32>>::new(mat_2, rule.clone());
+        let mut automata_3 = ToroidalAutomaton::<ToroidalBoolMatrix>::new(mat_3, rule.clone());
 
         automata_1.iter_rule(32);
         automata_2.iter_rule(32);

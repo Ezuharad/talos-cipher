@@ -184,6 +184,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     ///
     /// # Returns
     /// The Matrix's internal state as a table of `bool`s.
+    #[must_use]
     fn to_table(&self) -> Vec<Vec<bool>> {
         let mut result = vec![vec![false; self.get_cols()]; self.get_rows()];
 
@@ -205,6 +206,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     ///
     /// # Examples
     /// A $4 \times 3$ matrix has 4 rows.
+    #[must_use]
     fn get_rows(&self) -> usize;
     /// Returns the number of columns the Matrix has.
     ///
@@ -215,6 +217,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     ///
     /// # Examples
     /// A $4 \times 3$ matrix has 3 rows.
+    #[must_use]
     fn get_cols(&self) -> usize;
     /// Returns the number of elements the Matrix has.
     ///
@@ -225,6 +228,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     ///
     /// # Examples
     /// A $4 \times 3$ matrix has $4 * 3 = 12$ elements.
+    #[must_use]
     fn num_elements(&self) -> usize {
         self.get_rows() * self.get_cols()
     }
@@ -243,6 +247,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     ///
     /// # Returns
     /// The state of the accessed element
+    #[must_use]
     fn at(&self, idx: &ToroidalMatrixIndex) -> bool;
     /// Sets the value of the Matrix element at possibly canonized ToroidalMatrixIndex `idx` to
     /// `value` and returns the original value.
@@ -293,6 +298,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// * $1 \rightarrow 1$
     /// * $-1 \rightarrow 3$
     /// * $5 \rightarrow 0$
+    #[must_use]
     fn canonize_col_index(&self, col_index: isize) -> usize {
         col_index.rem_euclid(self.get_cols() as isize) as usize
     }
@@ -314,6 +320,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// * $1 \rightarrow 1$
     /// * $-1 \rightarrow 2$
     /// * $5 \rightarrow 2$
+    #[must_use]
     fn canonize_row_index(&self, row_index: isize) -> usize {
         row_index.rem_euclid(self.get_rows() as isize) as usize
     }
@@ -335,6 +342,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// * $(1, 3) \rightarrow (1, 3)$
     /// * $(-2, 15) \rightarrow (1, 0)$
     /// * $(5, -12) \rightarrow (2, -3)$
+    #[must_use]
     fn canonize_index(&self, index: ToroidalMatrixIndex) -> (usize, usize) {
         let (row, col) = index;
         let row_result = self.canonize_row_index(row);

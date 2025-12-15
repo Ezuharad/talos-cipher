@@ -31,6 +31,7 @@ impl KeyArgument {
     ///
     /// # Returns
     /// An encryption key.
+    #[must_use]
     pub fn get(self) -> u32 {
         match self {
             Self::String(key) => {

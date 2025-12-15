@@ -87,6 +87,7 @@ impl ToroidalBoolMatrix {
     ///
     /// # Returns
     /// The storage backing the Matrix.
+    #[must_use]
     pub fn get_storage(&self) -> &Vec<bool> {
         &self.storage
     }

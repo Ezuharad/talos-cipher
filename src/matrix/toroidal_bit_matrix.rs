@@ -1,5 +1,5 @@
 // 2025 Steven Chiacchira
-use crate::bitwise::BitWise;
+use crate::bitwise::{Bit, BitWise};
 use crate::key;
 use crate::matrix::{
     MatrixConstructError, MatrixOpError, ToroidalBinaryMatrix, ToroidalMatrixIndex,
@@ -38,7 +38,7 @@ impl<T: key::Key> ToroidalBinaryMatrix for ToroidalBitMatrix<T> {
 
         let n_bits = rows * cols;
         let n_bits_per_entry = T::n_bits();
-        let n_storage_entries = n_bits.div_ceil(n_bits_per_entry);
+        let n_storage_entries = n_bits.div_ceil(n_bits_per_entry as usize);
         let storage: Vec<T> = vec![T::zero(); n_storage_entries];
 
         let mut result = Self {
@@ -62,14 +62,14 @@ impl<T: key::Key> ToroidalBinaryMatrix for ToroidalBitMatrix<T> {
         let (element_idx, bit_idx) = self.get_element_bit_index_from_canon_index((row, col));
         let element = self.storage[element_idx];
 
-        element.get_bit(bit_idx)
+        element.get_bit(bit_idx).is_set()
     }
     fn set(&mut self, idx: &ToroidalMatrixIndex, new_val: bool) -> bool {
         let (row, col) = self.canonize_index(*idx);
         let (element_idx, bit_idx) = self.get_element_bit_index_from_canon_index((row, col));
         let element = &mut self.storage[element_idx];
 
-        element.set_bit(bit_idx, new_val)
+        element.set_bit(bit_idx, Bit::from(new_val)).is_set()
     }
     fn bitwise_xor(&mut self, other: &Self) -> Result<(), MatrixOpError> {
         if self.get_cols() != other.get_cols() || self.get_rows() != other.get_rows() {
@@ -91,6 +91,7 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
     ///
     /// # Returns
     /// The storage backing the Matrix.
+    #[must_use]
     pub fn get_storage(&self) -> &Vec<T> {
         &self.storage
     }
@@ -127,16 +128,16 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
             return Err(MatrixConstructError::EmptyTable());
         }
         let bits_per_t = T::n_bits();
-        let n_bits = rows * cols;
-        if n_bits.div_ceil(bits_per_t) != storage.len() {
+        let n_bits = (rows * cols) as u32;
+        if n_bits.div_ceil(bits_per_t) != (storage.len() as u32) {
             return Err(MatrixConstructError::InvalidStorage());
         }
 
-        let n_bits_in_storage = bits_per_t * storage.len();
+        let n_bits_in_storage = bits_per_t * (storage.len() as u32);
         let n_extra_bits = n_bits_in_storage - n_bits;
         if n_extra_bits > 0 {
             let last_byte = storage.last_mut().unwrap();
-            let bit_mask = T::max_value() << n_extra_bits;
+            let bit_mask = T::max_value() << (n_extra_bits as usize);
 
             *last_byte = *last_byte & bit_mask;
         }
@@ -168,10 +169,11 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
     /// * $(2, 3) \rightarrow (1, 1)$
     /// * $(6, 7) \rightarrow (9, 7)$
     /// * $(0, 11) \rightarrow (1, 3)$
+    #[must_use]
     fn get_element_bit_index_from_canon_index(&self, index: (usize, usize)) -> (usize, usize) {
         let (bit_row, bit_col) = index;
         let flat_bit_idx = self.get_cols() * bit_row + bit_col;
-        let bits_per_t = T::n_bits();
+        let bits_per_t = T::n_bits() as usize;
 
         let element_idx = flat_bit_idx / bits_per_t;
         let bit_idx = flat_bit_idx % bits_per_t;

@@ -1,11 +1,44 @@
 // 2025 Steven Chiacchira
 use crate::key;
 
+/// Represents a single bit.
+#[repr(transparent)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct Bit(bool);
+
+impl Bit {
+    /// Zero-valued bit.
+    pub const ZERO: Self = Bit(false);
+    /// One-valued bit.
+    pub const ONE: Self = Bit(true);
+
+    /// Returns `true` if the bit is set, and `false` otherwise.
+    ///
+    /// # Returns
+    /// Returns `true` if the bit is set, and `false` otherwise.
+    #[must_use]
+    pub fn is_set(&self) -> bool {
+        self.0
+    }
+}
+
+impl From<bool> for Bit {
+    fn from(is_set: bool) -> Self {
+        Self(is_set)
+    }
+}
+
 /// Trait implementing bitwise operations
 pub trait BitWise {
+    /// The number of bytes in the implementing type
+    #[must_use]
+    fn n_bytes() -> u32 {
+        Self::n_bits() / u8::BITS
+    }
     /// The number of bits in the implementing type.
-    fn n_bits() -> usize;
-    /// Returns `true` if the bit at `bit_index` is set, and `false` otherwise.
+    #[must_use]
+    fn n_bits() -> u32;
+    /// Returns the state of the bit at `bit_index`.
     ///
     /// <div class="warning">
     /// Because this is a low-level operation, no checks are made to ensure `bit_index` is in range
@@ -17,44 +50,43 @@ pub trait BitWise {
     /// * `bit_index` - the big-endian index of the bit to get the value of
     ///
     /// # Returns
-    /// `true` if the bit at `bit_index` is set, and `false` if the bit was not. Results in
-    /// undefined behavior if `bit_index` is greater than [`BitWise::n_bits`] for the implementing
-    /// type.
-    fn get_bit(&self, bit_index: usize) -> bool;
+    /// The state of the bit at `bit_index`. Results in undefined behavior if `bit_index` is greater
+    /// than or equal to [`BitWise::n_bits`] for the implementing type.
+    #[must_use]
+    fn get_bit(&self, bit_index: usize) -> Bit;
     /// Sets the bit at `bit_index` to `1` if `val`, and to `0` otherwise.
     ///
     /// <div class="warning">
     /// Because this is a low-level operation, no checks are made to ensure `bit_index` is in range
-    /// of the type. Using a `bit_index` which is out of range will cause a panic in debug mode,
-    /// and undefined behavior in release mode.
+    /// of the type. Using a `bit_index` which is greater than or equal to [`BitWise::n_bits`] for
+    /// the implementing type will cause a panic in debug mode, and undefined behavior in release mode.
     /// </div>
     ///
     /// # Arguments
     /// * `bit_index` - the big-endian index of the bit to set the value of
-    /// * `val` - the value to set the specified bit to. `true` sets to `1`, and `false` sets to
-    ///   `0`
+    /// * `val` - the value to set the specified bit to
     ///
     /// # Returns
-    /// `true` if the bit was originally set, and `false` if the bit was not. Results in
-    /// undefined behavior if `bit_index` is greater than [`BitWise::n_bits`] for the implementing
-    /// type.
-    fn set_bit(&mut self, bit_index: usize, val: bool) -> bool;
+    /// The original state of the bit at `bit_index`. Results in undefined behavior if `bit_index`
+    /// is greater than or equal to [`BitWise::n_bits`] for the implementing type.
+    fn set_bit(&mut self, bit_index: usize, val: Bit) -> Bit;
 }
 
 impl<T: key::Key> BitWise for T {
-    fn n_bits() -> usize {
-        T::zero().count_zeros() as usize
+    fn n_bits() -> u32 {
+        T::zero().count_zeros()
     }
-    fn get_bit(&self, bit_index: usize) -> bool {
-        debug_assert!(bit_index < T::n_bits());
+    fn get_bit(&self, bit_index: usize) -> Bit {
+        debug_assert!((bit_index as u32) < T::n_bits());
         let bit_mask = T::one() << bit_index;
-        (*self & bit_mask) != T::zero()
+        let is_set: bool = (*self & bit_mask) != T::zero();
+        Bit(is_set)
     }
-    fn set_bit(&mut self, bit_index: usize, new_val: bool) -> bool {
-        debug_assert!(bit_index < T::n_bits());
+    fn set_bit(&mut self, bit_index: usize, new_val: Bit) -> Bit {
+        debug_assert!((bit_index as u32) < T::n_bits());
         let result = self.get_bit(bit_index);
         let bit_mask = T::one() << bit_index;
-        if new_val {
+        if new_val.is_set() {
             *self = *self | bit_mask;
         } else {
             *self = *self & !bit_mask;
@@ -65,15 +97,15 @@ impl<T: key::Key> BitWise for T {
 
 #[cfg(test)]
 mod tests {
-    use crate::bitwise::BitWise;
+    use crate::bitwise::{Bit, BitWise};
 
     #[test]
     fn test_n_bits() {
-        assert_eq!(u8::n_bits(), u8::BITS as usize);
-        assert_eq!(u16::n_bits(), u16::BITS as usize);
-        assert_eq!(u32::n_bits(), u32::BITS as usize);
-        assert_eq!(u64::n_bits(), u64::BITS as usize);
-        assert_eq!(u128::n_bits(), u128::BITS as usize);
+        assert_eq!(u8::n_bits(), u8::BITS);
+        assert_eq!(u16::n_bits(), u16::BITS);
+        assert_eq!(u32::n_bits(), u32::BITS);
+        assert_eq!(u64::n_bits(), u64::BITS);
+        assert_eq!(u128::n_bits(), u128::BITS);
     }
 
     #[test]
@@ -85,11 +117,11 @@ mod tests {
             let is_even = i % 2 == 0;
             let idx = i as usize;
             if is_even {
-                assert!(bits.get_bit(idx));
-                assert!(!not_bits.get_bit(idx));
+                assert!(bits.get_bit(idx).is_set());
+                assert!(!not_bits.get_bit(idx).is_set());
             } else {
-                assert!(!bits.get_bit(idx));
-                assert!(not_bits.get_bit(idx));
+                assert!(!bits.get_bit(idx).is_set());
+                assert!(not_bits.get_bit(idx).is_set());
             }
         }
     }
@@ -99,7 +131,7 @@ mod tests {
     #[cfg(debug_assertions)]
     fn test_get_bit_out_of_bounds() {
         let bits = 0b11111111111111111111111111111111u32;
-        bits.get_bit(32);
+        let _ = bits.get_bit(32);
     }
 
     #[test]
@@ -108,10 +140,10 @@ mod tests {
 
         for i in 0..u32::BITS {
             let idx = i as usize;
-            bits.set_bit(idx, true);
+            bits.set_bit(idx, Bit::ONE);
             assert_eq!(bits, 1 << idx);
 
-            bits.set_bit(idx, false);
+            bits.set_bit(idx, Bit::ZERO);
             assert_eq!(bits, 0);
         }
     }
@@ -121,6 +153,6 @@ mod tests {
     #[cfg(debug_assertions)]
     fn test_set_bit_out_of_bounds() {
         let mut bits = 0b00000000000000000000000000000000u32;
-        bits.set_bit(32, true);
+        bits.set_bit(32, Bit::ONE);
     }
 }

@@ -2,6 +2,7 @@
 use std::fs;
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn test_encrypt_decrypt_equal() {
     let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
     let message =
@@ -26,6 +27,7 @@ fn test_encrypt_decrypt_equal() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn test_decrypt_breaking() {
     let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
     let message =
@@ -47,6 +49,7 @@ fn test_decrypt_breaking() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn test_encrypt_breaking() {
     let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
     let message =
@@ -70,6 +73,7 @@ fn test_encrypt_breaking() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn test_encrypt_is_unique() {
     let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
     let message =
@@ -91,6 +95,7 @@ fn test_encrypt_is_unique() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn test_decrypt_is_unique() {
     let message_file = concat!(env!("CARGO_MANIFEST_DIR"), "/data/tests/text_01.txt");
     let message =
