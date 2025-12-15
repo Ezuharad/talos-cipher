@@ -60,3 +60,8 @@ features = ["precommit-hook", "run-cargo-test", "run-cargo-clippy", "run-cargo-f
 [[bench]]
 name = "automaton_iter"
 harness = false
+
+[[bench]]
+name = "encryption_decryption"
+harness = false
+
