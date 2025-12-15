@@ -1,5 +1,5 @@
 // 2025 Steven Chiacchira
-use crate::automata::{ToroidalAutomaton, AutomatonRule};
+use crate::automata::{AutomatonRule, ToroidalAutomaton};
 use crate::matrix::{ToroidalBinaryMatrix, ToroidalBitMatrix, ToroidalMatrixIndex};
 use crate::parse;
 
