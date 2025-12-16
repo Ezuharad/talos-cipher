@@ -20,7 +20,7 @@ A #emph([Cellular Automata]) (CA) is a discrete-time, deterministic process whic
 == Cellular Automata
 We shall focus on cellular automata in the discrete 2D plane (a grid of bits), as these are well studied and allow for efficient spatial diffusion of information. CAs of this type take as input a certain grid state $G_i$ and output another grid state $G_(i+1)$, where each cell contains either a 0 or 1. We also call this process #emph([evolution]). The most famous example of such a cellular automata is John Conway's Game of Life, shown in @conway_life_example, which defines two simple rules for obtaining the next grid state:
 
-1. If a cell containing a "1" has 2-3 living neighbors, it stays a "1". Otherwise it becomes a "0"
+1. If a cell containing a "1" has 2-3 (inclusive) "1" neighbors, it stays a "1". Otherwise it becomes a "0"
 2. If a cell containing a "0" has exactly three "1" neighbors, it becomes a "1". Otherwise it stays a "0"
 
 #figure([#image("asset/game-of-life-glider.png")], caption: [Three time steps from Conway's Game of Life.. This particular configuration is known as a "glider".]) <conway_life_example>
@@ -145,8 +145,8 @@ As was done with our initialization matrices, we define a number of maxims we ca
 6. The rule is simple enough to process quickly, allowing for fast encryption and decryption (see @encryption_decryption).
 
 From these maxims, we propose the following Moore-neighborhood Class III Cellular Automata rule based on empirical observation.
-1. If a cell is a `1` and has 2-4 neighboring `1` cells it stays a `1`; otherwise it becomes a `0`.
-2. If a cell is a `0` and has 2-6 neighboring `1` cells it becomes a `1`; otherwise it becomes a `0`.
+1. If a cell is a `1` and has 2-4 (inclusive) neighboring `1` cells it stays a `1`; otherwise it becomes a `0`.
+2. If a cell is a `0` and has 2-6 (inclusive) neighboring `1` cells it becomes a `1`; otherwise it becomes a `0`.
 
 Where we additionally allow border cells to neighbor opposing border cells to promote faster diffusion of information. This property additionally makes all of the cells symmetric to each other, as without it border cell behavior would deviate from inner cell behavior. Although we do not prove any of our maxims about this CA rule due to the undecidable nature of related problems, we empirically observe that some are approximately satisfied. Numbers obtained from these experiments are given in @empirical_results.
 
