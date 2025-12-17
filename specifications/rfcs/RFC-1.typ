@@ -14,6 +14,8 @@
 #align(center, text(17pt)[#TITLE])
 #align(center, [#emph([#AUTHOR])])
 
+_Abstract_
+
 Here we present a method for mitigating the state collision problem identified in RFC-0. We additionally implement this method in Talos, our official name for the encryption algorithm, and experimentally show that it achieves the desired result of reducing state collisions.
 
 = Identified Problem
