@@ -14,6 +14,8 @@
 #align(center, text(17pt)[#TITLE])
 #align(center, [#emph([#AUTHOR])])
 
+_Abstract_
+
 A #emph([Cellular Automata]) (CA) is a discrete-time, deterministic process which uses a set of simple rules to simulate emergent complexities in dynamic systems. These constructs, despite their simplicity in construction, are well known to yield chaotic and diffuse results, making them intriguing as an entropy source for encryption algorithms. We seek to build a proof of concept algorithm which uses CAs for this purpose.
 
 = Prerequisites
@@ -23,11 +25,11 @@ We shall focus on cellular automata in the discrete 2D plane (a grid of bits), a
 1. If a cell containing a "1" has 2-3 (inclusive) "1" neighbors, it stays a "1". Otherwise it becomes a "0"
 2. If a cell containing a "0" has exactly three "1" neighbors, it becomes a "1". Otherwise it stays a "0"
 
-#figure([#image("asset/game-of-life-glider.png")], caption: [Three time steps from Conway's Game of Life.. This particular configuration is known as a "glider".]) <conway_life_example>
+#figure([#image("assets/game-of-life-glider.png")], caption: [Three time steps from Conway's Game of Life.. This particular configuration is known as a "glider".]) <conway_life_example>
 
 Where a given cell has eight adjacent neighbors (four sharing a side, four sharing only a corner), as shown in @adjacent_cell_diagram.
 
-#figure([#image("asset/adjacency-diagram.png", width: 20%)], caption: [A gray cell with its eight adjacent neighbors highlighted in blue. This group of cells is also known as the "Moore neighborhood" of the gray cell.]) <adjacent_cell_diagram>
+#figure([#image("assets/adjacency-diagram.png", width: 20%)], caption: [A gray cell with its eight adjacent neighbors highlighted in blue. This group of cells is also known as the "Moore neighborhood" of the gray cell.]) <adjacent_cell_diagram>
 
 These rules illustrate the power of cellular automata in creating complex, emergent behavior through state evolution. // We now discuss certain properties of automata which will be useful in the construction of our algorithm.
 
@@ -40,7 +42,7 @@ We describe in this section our proposed encryption and decryption scheme, as we
 
 == Encryption and Decryption <encryption_decryption>
 
-#figure([#image("asset/encryption_scheme.png")], caption: [Our encryption scheme.]) <scheme_diagram>
+#figure([#image("assets/encryption_scheme.png")], caption: [Our encryption scheme.]) <scheme_diagram>
 
 Our overall encryption scheme is shown in @scheme_diagram. In order to encrypt a message $P$, first split $P$ into $M$ 256-bit blocks $P_0, P_1, dots.h P_(M - 1)$. We additionally recommend that the final block be padded with either randomly sampled noise, or with words randomly sampled from a large text corpus, as this will prevent sparse final blocks from leaking information about the final automaton states.
 
@@ -229,9 +231,9 @@ Finally, we evaluate the frequency of each column or row index obtained in our s
 #figure([#grid(  columns: 2,
   gutter: 2mm,
   [
-    #figure([#image("asset/graph/100_seeds.png")], caption: [The relative frequencies of each row/column index, averaged across 100 keys each used for 100 blocks of plaintext.]) <100_seed_index_bar_graph>
+    #figure([#image("assets/graph/100_seeds.png")], caption: [The relative frequencies of each row/column index, averaged across 100 keys each used for 100 blocks of plaintext.]) <100_seed_index_bar_graph>
   ], [
-    #figure([#image("asset/graph/1_seed.png")], caption: [The relative frequencies of each row/column index, averaged 100000 states arising from 1 key.]) <1_seed_index_bar_graph>
+    #figure([#image("assets/graph/1_seed.png")], caption: [The relative frequencies of each row/column index, averaged 100000 states arising from 1 key.]) <1_seed_index_bar_graph>
   ])
 ])
 
