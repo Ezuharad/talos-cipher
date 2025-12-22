@@ -15,10 +15,10 @@ pub struct ToroidalBitMatrix<T: key::Key> {
 }
 
 impl<T: key::Key> ToroidalBinaryMatrix for ToroidalBitMatrix<T> {
-    fn get_rows(&self) -> usize {
+    fn get_n_rows(&self) -> usize {
         self.rows
     }
-    fn get_cols(&self) -> usize {
+    fn get_n_cols(&self) -> usize {
         self.cols
     }
     fn new(table: Vec<Vec<bool>>) -> Result<Self, MatrixConstructError> {
@@ -62,17 +62,21 @@ impl<T: key::Key> ToroidalBinaryMatrix for ToroidalBitMatrix<T> {
         let (element_idx, bit_idx) = self.get_element_bit_index_from_canon_index((row, col));
         let element = self.storage[element_idx];
 
-        element.get_bit(bit_idx).is_set()
+        unsafe { element.get_bit_unchecked(bit_idx).is_set() }
     }
     fn set(&mut self, idx: &ToroidalMatrixIndex, new_val: bool) -> bool {
         let (row, col) = self.canonize_index(*idx);
         let (element_idx, bit_idx) = self.get_element_bit_index_from_canon_index((row, col));
         let element = &mut self.storage[element_idx];
 
-        element.set_bit(bit_idx, Bit::from(new_val)).is_set()
+        unsafe {
+            element
+                .set_bit_unchecked(bit_idx, Bit::from(new_val))
+                .is_set()
+        }
     }
     fn bitwise_xor(&mut self, other: &Self) -> Result<(), MatrixOpError> {
-        if self.get_cols() != other.get_cols() || self.get_rows() != other.get_rows() {
+        if self.get_n_cols() != other.get_n_cols() || self.get_n_rows() != other.get_n_rows() {
             return Err(MatrixOpError::DifferentShapes());
         }
         for (this_element, other_element) in self.storage.iter_mut().zip(other.get_storage()) {
@@ -172,7 +176,7 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
     #[must_use]
     fn get_element_bit_index_from_canon_index(&self, index: (usize, usize)) -> (usize, usize) {
         let (bit_row, bit_col) = index;
-        let flat_bit_idx = self.get_cols() * bit_row + bit_col;
+        let flat_bit_idx = self.get_n_cols() * bit_row + bit_col;
         let bits_per_t = T::n_bits() as usize;
 
         let element_idx = flat_bit_idx / bits_per_t;
@@ -193,11 +197,11 @@ mod tests {
         let mat_1 = ToroidalBitMatrix::<u32>::new(table_1).unwrap();
         let mat_2 = ToroidalBitMatrix::<u32>::new(table_2).unwrap();
 
-        assert_eq!(mat_1.get_rows(), 2);
-        assert_eq!(mat_1.get_cols(), 3);
+        assert_eq!(mat_1.get_n_rows(), 2);
+        assert_eq!(mat_1.get_n_cols(), 3);
 
-        assert_eq!(mat_2.get_rows(), 4);
-        assert_eq!(mat_2.get_cols(), 1);
+        assert_eq!(mat_2.get_n_rows(), 4);
+        assert_eq!(mat_2.get_n_cols(), 1);
     }
 
     #[test]
@@ -248,14 +252,14 @@ mod tests {
         let mat_2 = ToroidalBitMatrix::<u32>::from_storage(32, 3, storage.clone()).unwrap();
         let mat_3 = ToroidalBitMatrix::<u32>::from_storage(31, 3, storage.clone()).unwrap();
 
-        assert_eq!(mat_1.get_rows(), 3);
-        assert_eq!(mat_1.get_cols(), 32);
+        assert_eq!(mat_1.get_n_rows(), 3);
+        assert_eq!(mat_1.get_n_cols(), 32);
 
-        assert_eq!(mat_2.get_rows(), 32);
-        assert_eq!(mat_2.get_cols(), 3);
+        assert_eq!(mat_2.get_n_rows(), 32);
+        assert_eq!(mat_2.get_n_cols(), 3);
 
-        assert_eq!(mat_3.get_rows(), 31);
-        assert_eq!(mat_3.get_cols(), 3);
+        assert_eq!(mat_3.get_n_rows(), 31);
+        assert_eq!(mat_3.get_n_cols(), 3);
     }
 
     #[test]

@@ -12,10 +12,10 @@ pub struct ToroidalBoolMatrix {
 }
 
 impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
-    fn get_rows(&self) -> usize {
+    fn get_n_rows(&self) -> usize {
         self.rows
     }
-    fn get_cols(&self) -> usize {
+    fn get_n_cols(&self) -> usize {
         self.cols
     }
     fn new(table: Vec<Vec<bool>>) -> Result<Self, MatrixConstructError> {
@@ -51,7 +51,7 @@ impl ToroidalBinaryMatrix for ToroidalBoolMatrix {
     fn set(&mut self, idx: &ToroidalMatrixIndex, value: bool) -> bool {
         let (row, col) = self.canonize_index(*idx);
 
-        let vec_idx: usize = row * self.get_cols() + col;
+        let vec_idx: usize = row * self.get_n_cols() + col;
         let result = self.storage[vec_idx];
         self.storage[vec_idx] = value;
 
@@ -140,11 +140,11 @@ mod tests {
         let mat_1 = ToroidalBoolMatrix::new(table_1).unwrap();
         let mat_2 = ToroidalBoolMatrix::new(table_2).unwrap();
 
-        assert_eq!(mat_1.get_rows(), 2);
-        assert_eq!(mat_1.get_cols(), 3);
+        assert_eq!(mat_1.get_n_rows(), 2);
+        assert_eq!(mat_1.get_n_cols(), 3);
 
-        assert_eq!(mat_2.get_rows(), 4);
-        assert_eq!(mat_2.get_cols(), 1);
+        assert_eq!(mat_2.get_n_rows(), 4);
+        assert_eq!(mat_2.get_n_cols(), 1);
     }
 
     #[test]

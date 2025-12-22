@@ -68,7 +68,7 @@ impl<T: ToroidalBinaryMatrix + Clone> ToroidalAutomaton<T> {
     /// # Arguments
     /// * `iterations` - the number of times to apply the `ToroidalAutomaton`'s rule
     pub fn iter_rule(&mut self, iterations: u32) {
-        let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
+        let (rows, cols) = (self.state.get_n_rows(), self.state.get_n_cols());
 
         for _ in 0..iterations {
             for row in 0..rows {
@@ -161,9 +161,9 @@ impl<T: ToroidalBinaryMatrix + Clone> fmt::Display for ToroidalAutomaton<T> {
     /// ####
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let (rows, cols) = (self.state.get_rows(), self.state.get_cols());
+        let (rows, cols) = (self.state.get_n_rows(), self.state.get_n_cols());
         let mut result: String =
-            String::with_capacity((self.state.get_rows() + 1) * self.state.get_cols());
+            String::with_capacity((self.state.get_n_rows() + 1) * self.state.get_n_cols());
 
         for row in 0..rows {
             let row_str = (0..cols)

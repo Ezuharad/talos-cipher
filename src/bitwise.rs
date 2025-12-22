@@ -37,13 +37,39 @@ pub trait BitWise {
     /// The number of bits in the implementing type.
     #[must_use]
     fn n_bits() -> u32;
+    /// Returns the state of the bit at `bit_index`, or `None` if `bit_index` is greater than or
+    /// equal to [`BitWise::n_bits`] for the implementing type.
+    ///
+    /// # Arguments
+    /// * `bit_index` - the big-endian index of the bit to get the value of
+    ///
+    /// # Returns
+    /// The state of the bit at `bit_index`, or `None` if `bit_index` is greater than or equal to
+    /// [`BitWise::n_bits`] for the implementing type.
+    #[must_use]
+    fn get_bit(&self, bit_index: usize) -> Option<Bit>;
+    /// Sets the bit at `bit_index` to that of `val`.
+    ///
+    /// If `bit_index` is greater than or equal to [`BitWise::n_bits`] for the implementing type,
+    /// `None` is returned and this operation is a no-op.
+    ///
+    /// # Arguments
+    /// * `bit_index` - the big-endian index of the bit to set the value of
+    /// * `val` - the value to set the specified bit to
+    ///
+    /// # Returns
+    /// The original state of the bit at `bit_index`, or `None` if `bit_index` is greater than or
+    /// equal to [`BitWise::n_bits`] for the implementing type.
+    #[must_use]
+    fn set_bit(&mut self, bit_index: usize, val: Bit) -> Option<Bit>;
     /// Returns the state of the bit at `bit_index`.
     ///
-    /// <div class="warning">
+    /// # Safety
     /// Because this is a low-level operation, no checks are made to ensure `bit_index` is in range
-    /// of the type. Using a `bit_index` which is out of range will cause a panic in debug mode,
-    /// and undefined behavior in release mode.
-    /// </div>
+    /// of the type. Using a `bit_index` which is greater than or equal to [`BitWise::n_bits`] for the
+    /// implementing type will cause a panic in debug mode, and undefined behavior in release mode.
+    ///
+    /// Prefer [`BitWise::set_bit`] for a safe alternative to this method.
     ///
     /// # Arguments
     /// * `bit_index` - the big-endian index of the bit to get the value of
@@ -52,14 +78,15 @@ pub trait BitWise {
     /// The state of the bit at `bit_index`. Results in undefined behavior if `bit_index` is greater
     /// than or equal to [`BitWise::n_bits`] for the implementing type.
     #[must_use]
-    fn get_bit(&self, bit_index: usize) -> Bit;
-    /// Sets the bit at `bit_index` to `1` if `val`, and to `0` otherwise.
+    unsafe fn get_bit_unchecked(&self, bit_index: usize) -> Bit;
+    /// Sets the bit at `bit_index` to that of `val`.
     ///
-    /// <div class="warning">
+    /// # Safety
     /// Because this is a low-level operation, no checks are made to ensure `bit_index` is in range
     /// of the type. Using a `bit_index` which is greater than or equal to [`BitWise::n_bits`] for
     /// the implementing type will cause a panic in debug mode, and undefined behavior in release mode.
-    /// </div>
+    ///
+    /// Prefer [`BitWise::get_bit`] for a safe alternative to this method.
     ///
     /// # Arguments
     /// * `bit_index` - the big-endian index of the bit to set the value of
@@ -68,22 +95,36 @@ pub trait BitWise {
     /// # Returns
     /// The original state of the bit at `bit_index`. Results in undefined behavior if `bit_index`
     /// is greater than or equal to [`BitWise::n_bits`] for the implementing type.
-    fn set_bit(&mut self, bit_index: usize, val: Bit) -> Bit;
+    unsafe fn set_bit_unchecked(&mut self, bit_index: usize, val: Bit) -> Bit;
 }
 
 impl<T: key::Key> BitWise for T {
     fn n_bits() -> u32 {
         T::zero().count_zeros()
     }
-    fn get_bit(&self, bit_index: usize) -> Bit {
+    fn get_bit(&self, bit_index: usize) -> Option<Bit> {
+        if bit_index >= Self::n_bits() as usize {
+            return None;
+        }
+
+        unsafe { Some(self.get_bit_unchecked(bit_index)) }
+    }
+    fn set_bit(&mut self, bit_index: usize, val: Bit) -> Option<Bit> {
+        if bit_index >= Self::n_bits() as usize {
+            return None;
+        }
+
+        unsafe { Some(self.set_bit_unchecked(bit_index, val)) }
+    }
+    unsafe fn get_bit_unchecked(&self, bit_index: usize) -> Bit {
         debug_assert!((bit_index as u32) < T::n_bits());
         let bit_mask = T::one() << bit_index;
         let is_set: bool = (*self & bit_mask) != T::zero();
         Bit(is_set)
     }
-    fn set_bit(&mut self, bit_index: usize, new_val: Bit) -> Bit {
+    unsafe fn set_bit_unchecked(&mut self, bit_index: usize, new_val: Bit) -> Bit {
         debug_assert!((bit_index as u32) < T::n_bits());
-        let result = self.get_bit(bit_index);
+        let result = self.get_bit_unchecked(bit_index);
         let bit_mask = T::one() << bit_index;
         if new_val.is_set() {
             *self = *self | bit_mask;
@@ -116,11 +157,15 @@ mod tests {
             let is_even = i % 2 == 0;
             let idx = i as usize;
             if is_even {
-                assert!(bits.get_bit(idx).is_set());
-                assert!(!not_bits.get_bit(idx).is_set());
+                unsafe {
+                    assert!(bits.get_bit_unchecked(idx).is_set());
+                    assert!(!not_bits.get_bit_unchecked(idx).is_set());
+                }
             } else {
-                assert!(!bits.get_bit(idx).is_set());
-                assert!(not_bits.get_bit(idx).is_set());
+                unsafe {
+                    assert!(!bits.get_bit_unchecked(idx).is_set());
+                    assert!(not_bits.get_bit_unchecked(idx).is_set());
+                }
             }
         }
     }
@@ -130,7 +175,9 @@ mod tests {
     #[cfg(debug_assertions)]
     fn test_get_bit_out_of_bounds() {
         let bits = 0b11111111111111111111111111111111u32;
-        let _ = bits.get_bit(32);
+        unsafe {
+            let _ = bits.get_bit_unchecked(32);
+        }
     }
 
     #[test]
@@ -139,11 +186,13 @@ mod tests {
 
         for i in 0..u32::BITS {
             let idx = i as usize;
-            bits.set_bit(idx, Bit::ONE);
-            assert_eq!(bits, 1 << idx);
+            unsafe {
+                bits.set_bit_unchecked(idx, Bit::ONE);
+                assert_eq!(bits, 1 << idx);
 
-            bits.set_bit(idx, Bit::ZERO);
-            assert_eq!(bits, 0);
+                bits.set_bit_unchecked(idx, Bit::ZERO);
+                assert_eq!(bits, 0);
+            }
         }
     }
 
@@ -152,6 +201,8 @@ mod tests {
     #[cfg(debug_assertions)]
     fn test_set_bit_out_of_bounds() {
         let mut bits = 0b00000000000000000000000000000000u32;
-        bits.set_bit(32, Bit::ONE);
+        unsafe {
+            bits.set_bit_unchecked(32, Bit::ONE);
+        }
     }
 }
