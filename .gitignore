@@ -6,4 +6,4 @@ data/experiment
 target
 doc
 
-rfc/**/*pdf
+specifications/**/*pdf
