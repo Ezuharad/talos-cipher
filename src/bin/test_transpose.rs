@@ -26,7 +26,7 @@ struct Args {
     #[arg(long, default_value_t = 1)]
     seed_samples: u32,
 
-    /// File to use for initializing the [Automaton](automata::Automaton) state.
+    /// File to use for initializing the [Automaton](automata::ToroidalAutomaton) state.
     #[arg(long)]
     init_file: String,
 }

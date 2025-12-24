@@ -126,10 +126,10 @@ pub fn decrypt_message_256(
         .collect()
 }
 
-/// Applies the matrix scrambling algorithm $V$ explained in RFC-0 section 2.2.3.
+/// Applies the matrix scrambling algorithm `V` explained in RFC-0 section 2.2.3.
 ///
 /// # Arguments
-/// * `message_matrix` - the matrix to scramble with $V$. Modified inplace
+/// * `message_matrix` - the matrix to scramble with `V`. Modified inplace
 /// * `key` - the key to use for unscrambling
 fn scramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T) {
     for row_block in 0..4 {
@@ -164,10 +164,10 @@ fn scramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T)
     }
 }
 
-/// Applies the inverse matrix scrambling algorithm $V^(-1)$ explained in RFC-0 section 2.2.3.
+/// Applies the inverse matrix scrambling algorithm `V^(-1)` explained in RFC-0 section 2.2.3.
 ///
 /// # Arguments
-/// * `message_matrix` - the matrix to unscramble with $V^(-1)$. Modified inplace
+/// * `message_matrix` - the matrix to unscramble with `V^(-1)`. Modified inplace
 /// * `key` - the key to use for unscrambling
 fn unscramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &T) {
     for col_block in (0..4).rev() {
@@ -212,7 +212,7 @@ fn unscramble_matrix_256<T: ToroidalBinaryMatrix>(message_matrix: &mut T, key: &
 /// * `message` - the message to split into blocks
 ///
 /// # Returns
-/// `message` split into blocks containing 256 bits (32 u8s).
+/// `message` split into blocks containing 256 bits (32 `u8s`).
 #[must_use]
 fn block_split_256_message(message: Vec<u8>) -> Vec<Vec<u8>> {
     let u8s_per_block = BLOCK_SIZE / u8::BITS as usize;
@@ -293,11 +293,11 @@ pub fn temporal_seed_automaton(
 /// Reads 4 bit values at `idx0`, `idx`, `idx2`, `idx3`, in `matrix`, then concatenates them into a
 /// `u8`.
 ///
-/// See section 2.2.3 for details on the matrix scrambling algorithm $V$ as well as the matrix
-///   unscrambling algorithm $V^{-1}$ where this is used.
+/// See RFC-0 section 2.2.3 for details on the matrix scrambling algorithm `V` as well as the matrix
+///   unscrambling algorithm `V^-1` where this is used.
 ///
 /// # Arguments
-/// * `matrx` - the matrix to read from.
+/// * `matrix` - the matrix to read from.
 /// * `idx0` - the first index to read a bit value from.
 /// * `idx1` - the second index to read a bit value from.
 /// * `idx2` - the third index to read a bit value from.

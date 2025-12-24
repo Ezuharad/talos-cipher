@@ -95,8 +95,8 @@ impl ToroidalBoolMatrix {
     /// columns.
     ///
     /// The following criteria must be met for Matrix construction:
-    /// * $rows > 0 \land cols > 0$
-    /// * $rows * cols$ = storage.size()
+    /// * `rows > 0 && cols > 0`
+    /// * `rows * cols == storage.len()`
     ///
     /// See [`MatrixConstructError`] for possible error variants resulting from violating these
     /// criteria.

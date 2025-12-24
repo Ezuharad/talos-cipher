@@ -107,11 +107,11 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
     /// the end of the vector will be zeroed.
     ///
     /// The following criteria must be met for Matrix construction:
-    /// * $rows > 0 \land cols > 0$
-    /// * $rows * cols \geq$ storage.size() * `T::BITS` $land rows * cols \lt$ (storage.size() + 1) *
-    ///   `T::BITS`
+    /// * `rows > 0 && cols > 0`
+    /// * `rows * cols >= storage.size() * T::BITS && rows * cols < (storage.size() + 1) *
+    ///   T::BITS`
     ///
-    /// Where T::BITS is the number of bits in the unsigned integer type `T`. See [`MatrixConstructError`]
+    /// Where `T::BITS` is the number of bits in the [`key::Key`] implementing type `T`. See [`MatrixConstructError`]
     /// for possible error variants resulting from violating these criteria. Note that
     /// [`MatrixConstructError::RaggedTable`] is never returned from this constructor.
     ///
@@ -169,10 +169,10 @@ impl<T: key::Key> ToroidalBitMatrix<T> {
     /// The computed element and bit indices from canonized index `index`.
     ///
     /// # Examples
-    /// Given a $4 \times 12$ Matrix with a Vec<u8> backing storage:
-    /// * $(2, 3) \rightarrow (1, 1)$
-    /// * $(6, 7) \rightarrow (9, 7)$
-    /// * $(0, 11) \rightarrow (1, 3)$
+    /// Given a `4 \times 12` Matrix with a `Vec<u8>` backing storage:
+    /// * `(2, 3) -> (1, 1)`
+    /// * `(6, 7) -> (9, 7)`
+    /// * `(0, 11) -> (1, 3)`
     #[must_use]
     fn get_element_bit_index_from_canon_index(&self, index: (usize, usize)) -> (usize, usize) {
         let (bit_row, bit_col) = index;
