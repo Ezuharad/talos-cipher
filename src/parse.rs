@@ -49,7 +49,7 @@ impl fmt::Display for TableReadError {
 /// |Base 10|0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|
 pub const BASE_32_DIGITS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
-/// Generates a map from base-32 digits to boolean values from a u32.
+/// Generates a map from base-32 digits to `bool` values from a `u32`.
 ///
 /// See [`BASE_32_DIGITS`] for information on base-32 counting.
 ///
@@ -122,12 +122,13 @@ pub fn parse_bool_table(
 }
 
 /// Given a string representing an initial matrix state with base-32 digits for variable values,
-/// returns a vector X, where X\[i\] is the set of ToroidalMatrixIndices of the base-32
+/// returns a vector `X`, where `X\[i\]` is the set of ToroidalMatrixIndices of the base-32
 /// representation of `i` in the string.
 ///
 /// See section 2.1 of RFC-1 for details on where this method is used.
 /// See also [`get_char_indices`](crate::parse) for details on obtaining the ToroidalMatrixIndices from `string`.
 /// See also [`BASE_32_DIGITS`](crate::parse) for information on base-32 counting.
+/// See also
 ///
 /// # Arguments
 /// * `string` - the string to find the ToroidalMatrixIndices of base-32 digits in
@@ -141,7 +142,7 @@ pub fn parse_bool_table(
 /// A.A.B
 /// ##A.A
 /// ```
-/// A is at Toroidal indices [(0, 0), (0, 2), (0, 4), (1, 2), (1, 4)]. Thus, the resulting vector
+/// A is at canon toroidal indices [(0, 0), (0, 2), (0, 4), (1, 2), (1, 4)]. Thus, the resulting vector
 /// at index 0 ('A' in base-32) is the vector [(0, 0), (0, 2), (0, 4), (1, 2), (1, 4)].
 #[must_use]
 pub fn get_temporal_seed_map(string: &str) -> Vec<Vec<ToroidalMatrixIndex>> {
@@ -153,7 +154,7 @@ pub fn get_temporal_seed_map(string: &str) -> Vec<Vec<ToroidalMatrixIndex>> {
 }
 
 /// Returns the indices of `character` in `string` as canonical
-/// [`ToroidalMatrixIndices`](crate::matrix::ToroidalMatrixIndex).
+/// [`ToroidalMatrixIndices`](talos::matrix::ToroidalMatrixIndex).
 ///
 /// # Arguments
 /// * `string` - the string to search for `character` in

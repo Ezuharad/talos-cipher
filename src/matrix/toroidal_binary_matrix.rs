@@ -4,14 +4,14 @@ use std::fmt;
 
 /// Type used to specify elements of a [`ToroidalBinaryMatrix`].
 ///
-/// Given ToroidalBinaryIndex (r, c), $r \in \bb{Z}$ represents the 0-indexed row of a element, while
-/// $c \in \bb{Z}$ represents the 0-indexed column of the element.
+/// Given ToroidalBinaryIndex (r, c), integer r represents the 0-indexed row of an element and
+/// integer c represents the 0-indexed column of the element.
 /// Due to the Matrix's toroidal nature, a ToroidalMatrixIndex's coordinates can be any integer
 /// value and still be valid.
 ///
-/// A ToroidalMatrixIndex $(r, c)$ on an $R \times C$ ToroidalMatrix where either:
-/// * $r < 0 \lor c < 0$
-/// * $r > R \lor c > C$
+/// A ToroidalMatrixIndex (r, c) on a ToroidalMatrix with `rows` rows and `cols` columns where either:
+/// * `r < 0 || c < 0`
+/// * `r > rows || c > cols`
 ///
 /// Are said to be in "noncanonical" form. A ToroidalMatrixIndex can always be made into canonical
 /// form given a ToroidalBinaryMatrix. See:
@@ -62,9 +62,9 @@ pub enum MatrixConstructError {
     /// A Matrix cannot have no elements.
     ///
     /// # Examples
-    /// A $1 \times 1$ Matrix is *ALLOWED*
-    /// A $0 \times 0$ Matrix is *NOT ALLOWED*
-    /// A $0 \times 5$ Matrix is *NOT ALLOWED*
+    /// A 1 x 1 Matrix is *ALLOWED*
+    /// A 0 x 0 Matrix is *NOT ALLOWED*
+    /// A 0 x 5 Matrix is *NOT ALLOWED*
     ///
     /// Takes precedence over the [`MatrixConstructError::RaggedTable`] enum variant.
     EmptyTable(),
@@ -143,7 +143,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// # Returns
     /// A new instance of the implementing class with the state specified by `table`
     fn new(table: Vec<Vec<bool>>) -> Result<Self, MatrixConstructError>;
-    /// Creates a new rows $\times$ cols matrix containing only `false` entries.
+    /// Creates a new `rows` x `cols` matrix containing only `false` entries.
     ///
     /// Note that if either `rows` or `cols` is zero, a [`MatrixConstructError::EmptyTable`] error
     /// will be returned.
@@ -155,12 +155,12 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// * `cols` - a positive number of columns for the matrix to have
     ///
     /// # Returns
-    /// A new rows $times$ cols matrix containing only `false` entries.
+    /// A new `rows` x `cols` matrix containing only `false` entries.
     fn zeros(rows: usize, cols: usize) -> Result<Self, MatrixConstructError> {
         let table = vec![vec![false; cols]; rows];
         Self::new(table)
     }
-    /// Creates a new rows $\times$ cols matrix containing only `true` entries.
+    /// Creates a new `rows` x `cols` matrix containing only `true` entries.
     ///
     /// Note that if either `rows` or `cols` is zero, a [`MatrixConstructError::EmptyTable`] error
     /// will be returned.
@@ -172,7 +172,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// * `cols` - a positive number of columns for the matrix to have
     ///
     /// # Returns
-    /// A new rows $times$ cols matrix containing only `true` entries.
+    /// A new `rows` x `cols` matrix containing only `true` entries.
     fn ones(rows: usize, cols: usize) -> Result<Self, MatrixConstructError> {
         let table = vec![vec![true; cols]; rows];
         Self::new(table)
@@ -205,7 +205,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// The number of rows the Matrix has.
     ///
     /// # Examples
-    /// A $4 \times 3$ matrix has 4 rows.
+    /// A `4` x `3` matrix has `4` rows.
     #[must_use]
     fn get_n_rows(&self) -> usize;
     /// Returns the number of columns the Matrix has.
@@ -216,7 +216,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// The number of columns the Matrix has
     ///
     /// # Examples
-    /// A $4 \times 3$ matrix has 3 rows.
+    /// A `4` x `3` matrix has `3` columns.
     #[must_use]
     fn get_n_cols(&self) -> usize;
     /// Returns the number of elements the Matrix has.
@@ -227,7 +227,7 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// The number of elements the Matrix has
     ///
     /// # Examples
-    /// A $4 \times 3$ matrix has $4 * 3 = 12$ elements.
+    /// A `4` x `3` matrix has `4 * 3 = 12` elements.
     #[must_use]
     fn num_elements(&self) -> usize {
         self.get_n_rows() * self.get_n_cols()
@@ -281,10 +281,10 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// tuple if the call succeeded
     fn bitwise_xor(&mut self, other: &Self) -> Result<(), MatrixOpError>;
     /// Converts `col_index` to a canonized column index.
-    /// Given col index i, canonized index i' = i % cols, where x % y is the Euclidean remainder of
-    /// x / y.
+    /// Given col index `i`, canonized index `i' = i % cols`, where `x % y` is the Euclidean remainder of
+    /// `x / y`.
     ///
-    /// Note that the Euclidean remainder is not equivalent to the modulus operator when $y < 0$. See
+    /// Note that the Euclidean remainder is not equivalent to the modulus operator when `y < 0`. See
     /// [`u32::rem_euclid`] for details.
     ///
     /// # Arguments
@@ -294,19 +294,19 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// The canonized column index.
     ///
     /// # Examples
-    /// Given a $3 \times 5$ Matrix:
-    /// * $1 \rightarrow 1$
-    /// * $-1 \rightarrow 3$
-    /// * $5 \rightarrow 0$
+    /// Given a `3 x 5` Matrix:
+    /// * `1 -> 1`
+    /// * `-1 -> 3`
+    /// * `5 -> 0`
     #[must_use]
     fn canonize_col_index(&self, col_index: isize) -> usize {
         col_index.rem_euclid(self.get_n_cols() as isize) as usize
     }
     /// Converts `row_index` to a canonized row index.
-    /// Given row index i, canonized index i' = i % rows, where x % y is the Euclidean remainder of
-    /// x / y.
+    /// Given row index `i`, canonized index `i' = i % rows`, where `x % y` is the Euclidean remainder of
+    /// `x / y`.
     ///
-    /// Note that the Euclidean remainder is not equivalent to the modulus operator when $y < 0$. See
+    /// Note that the Euclidean remainder is not equivalent to the modulus operator when `y < 0`. See
     /// [`u32::rem_euclid`] for details.
     ///
     /// # Arguments
@@ -316,19 +316,19 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// The canonized row index
     ///
     /// # Examples
-    /// Given a $3 \times 5$ Matrix:
-    /// * $1 \rightarrow 1$
-    /// * $-1 \rightarrow 2$
-    /// * $5 \rightarrow 2$
+    /// Given a `3 \times 5` Matrix:
+    /// * `1 -> 1`
+    /// * `-1 -> 2`
+    /// * `5 -> 2`
     #[must_use]
     fn canonize_row_index(&self, row_index: isize) -> usize {
         row_index.rem_euclid(self.get_n_rows() as isize) as usize
     }
     /// Converts `index` to a canonized index.
-    /// Given index i = (a, b), canonized index i' = (a % rows, b % cols), where x % y is the Euclidean
-    /// remainder of x / y.
+    /// Given index `i = (a, b)`, canonized index `i' = (a % rows, b % cols)`, where `x % y` is the Euclidean
+    /// remainder of `x / y`.
     ///
-    /// Note that the Euclidean remainder is not equivalent to the modulus operator when $y < 0$. See
+    /// Note that the Euclidean remainder is not equivalent to the modulus operator when `y < 0`. See
     /// [`u32::rem_euclid`] for details.
     ///
     /// # Arguments
@@ -338,10 +338,10 @@ pub trait ToroidalBinaryMatrix: Sized {
     /// The canonized element index
     ///
     /// # Examples
-    /// Given a $3 \times 5$ Matrix:
-    /// * $(1, 3) \rightarrow (1, 3)$
-    /// * $(-2, 15) \rightarrow (1, 0)$
-    /// * $(5, -12) \rightarrow (2, -3)$
+    /// Given a `3 \times 5` Matrix:
+    /// * `(1, 3) -> (1, 3)`
+    /// * `(-2, 15) -> (1, 0)`
+    /// * `(5, -12) -> (2, -3)`
     #[must_use]
     fn canonize_index(&self, index: ToroidalMatrixIndex) -> (usize, usize) {
         let (row, col) = index;
