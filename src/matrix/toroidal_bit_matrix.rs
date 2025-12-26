@@ -1,5 +1,5 @@
 // 2025 Steven Chiacchira
-use crate::bitwise::{Bit, BitWise};
+use crate::bits::{Bit, BitWise};
 use crate::key;
 use crate::matrix::{
     MatrixConstructError, MatrixOpError, ToroidalBinaryMatrix, ToroidalMatrixIndex,

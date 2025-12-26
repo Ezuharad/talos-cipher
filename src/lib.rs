@@ -9,7 +9,7 @@
 /// Module containing toroidal automata implementations.
 pub mod automata;
 /// Module exposing bit access and mutation methods for unsigned integer types.
-pub mod bitwise;
+pub mod bits;
 /// High-level subroutines for encryption per the Talos protocol.
 pub mod encrypt;
 /// Utilities for getting encryption keys from users. Supports String keys via SHA-256.

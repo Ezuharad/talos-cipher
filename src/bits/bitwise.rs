@@ -1,31 +1,6 @@
 // 2025 Steven Chiacchira
+use crate::bits::Bit;
 use crate::key;
-
-/// Represents a single bit.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Bit(bool);
-
-impl Bit {
-    /// Zero-valued bit.
-    pub const ZERO: Self = Bit(false);
-    /// One-valued bit.
-    pub const ONE: Self = Bit(true);
-
-    /// Returns `true` if the bit is set, and `false` otherwise.
-    ///
-    /// # Returns
-    /// Returns `true` if the bit is set, and `false` otherwise.
-    #[must_use]
-    pub fn is_set(&self) -> bool {
-        self.0
-    }
-}
-
-impl From<bool> for Bit {
-    fn from(is_set: bool) -> Self {
-        Self(is_set)
-    }
-}
 
 /// Trait implementing bitwise operations
 pub trait BitWise {
@@ -120,7 +95,7 @@ impl<T: key::Key> BitWise for T {
         debug_assert!((bit_index as u32) < T::n_bits());
         let bit_mask = T::one() << bit_index;
         let is_set: bool = (*self & bit_mask) != T::zero();
-        Bit(is_set)
+        Bit::from(is_set)
     }
     unsafe fn set_bit_unchecked(&mut self, bit_index: usize, new_val: Bit) -> Bit {
         debug_assert!((bit_index as u32) < T::n_bits());
@@ -137,7 +112,7 @@ impl<T: key::Key> BitWise for T {
 
 #[cfg(test)]
 mod tests {
-    use crate::bitwise::{Bit, BitWise};
+    use crate::bits::{Bit, BitWise};
 
     #[test]
     fn test_n_bits() {
