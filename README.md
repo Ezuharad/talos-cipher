@@ -1,6 +1,8 @@
 # Talos: Cellular Automata for Encryption
 This is the code and RFC for a novel encryption algorithm based on cellular automata. We name the project after the mythical bronze automaton Talos, who defended the island of Crete from invaders.
 
+View project documentation [here](https://ezuharad.github.io/talos-cipher).
+
 ## Running the Project ⚒️
 ### Compiling Talos
 The rust implementation of our encryption algorithm can be built using cargo, installed via [rustup](https://rustup.rs/). Once cargo has been installed, the project can be built with `cargo build --release` from the project root.
