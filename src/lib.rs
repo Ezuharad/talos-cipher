@@ -1,5 +1,5 @@
 //! # Talos
-//! An Experimental Symmetric Encryption Algorithm base on Cellular Automata
+//! An experimental symmetric encryption algorithm based on cellular automata
 //!
 //! Implementation of a novel [cellular
 //! automata](https://en.wikipedia.org/wiki/Cellular_automaton) based symmetric encryption
