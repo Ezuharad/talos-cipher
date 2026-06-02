@@ -51,7 +51,7 @@ fn main() {
         "# Number of generations between samples: {}",
         args.inter_generations
     );
-    println!("# Initial File: {}", &args.init_file);
+    println!("# Initial File: {}", args.init_file);
     println!("test\tseed\tgeneration\tcol_row\tgenerated_idx");
 
     let seed_matrix = read_to_string(&args.init_file).unwrap();

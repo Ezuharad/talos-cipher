@@ -39,7 +39,7 @@ fn main() {
     println!("# Using contiguous seeds: {}", args.use_contiguous_seeds);
     println!("# Number of seeds: {}", args.seeds);
     println!("# Number of generations: {}", args.generations);
-    println!("# Initial File: {}", &args.init_file);
+    println!("# Initial File: {}", args.init_file);
     println!("test\ttseed\tgeneration\tn_alive");
 
     for (test, seed) in seed_gen.enumerate() {

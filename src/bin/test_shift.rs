@@ -48,7 +48,7 @@ fn main() {
     println!("# Using contiguous seeds: {}", args.use_contiguous_seeds);
     println!("# Number of seeds: {}", args.seeds);
     println!("# Number of generations: {}", args.generations);
-    println!("# Initial File: {}", &args.init_file);
+    println!("# Initial File: {}", args.init_file);
     println!("test\tn_generations\tseed\tavg_alive\tcontains_global_duplicate");
 
     for (test, seed) in seed_gen.enumerate() {
